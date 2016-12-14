@@ -1,0 +1,24 @@
+{
+  "name": "facilitate-releases",
+  "version": "0.0.0",
+  "description": "Make things happen",
+  "main": "facilitate-releases.js",
+  "dependencies": {
+    "module-library": "*",
+    "release-checklist": "*",
+    "web-element": "*",
+    "web-site": "*",
+    "browser-bridge": "*",
+    "tell-the-universe": "*",
+    "basic-styles": "*",
+    "function-call": "*",
+    "make-request": "*"
+  },
+  "scripts": {
+    "start": "node start.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/erikpukinskis/facilitate-releases.git"
+  }
+}
