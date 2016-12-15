@@ -10,7 +10,8 @@ module.exports = library.export(
       tellTheUniverse = tellTheUniverse
         .called("project-process")
         .withNames({
-          releaseChecklist: "release-checklist"
+          releaseChecklist: "release-checklist",
+          workSpace: "work-space",
         })
 
       if (process.env.AWS_ACCESS_KEY_ID) {
