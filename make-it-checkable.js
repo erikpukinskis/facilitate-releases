@@ -32,11 +32,15 @@ module.exports = library.export(
 
           var isCompleted = el.classList.contains("is-checked")
 
-          if (isCompleted) { return }
+          if (isCompleted) {
+            el.classList.remove("is-checked")
+          } else {
+            el.classList.add("is-checked")
+          }
 
-          el.classList.add("is-checked")
+          isCompleted = !isCompleted
 
-          callback(id)
+          callback(isCompleted, id)
         })
       }
 

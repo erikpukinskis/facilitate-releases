@@ -26,9 +26,9 @@ module.exports = library.export(
         })
       }
 
-      // releaseChecklist("Someone can build a house", "4uwzyf")
+      releaseChecklist("Someone can build a house", "4uwzyf")
 
-      // releaseChecklist.addTask("4uwzyf", "project facilitator can write down a release checklist")
+      releaseChecklist.addTask("4uwzyf", "project facilitator can write down a release checklist")
       // releaseChecklist.addTask("4uwzyf", "planner can add a project plan as a dependency to a task")
       // releaseChecklist.addTask("4uwzyf", "planner writes bond")
       // releaseChecklist.addTask("4uwzyf", "planner adds labor allocations to bond")
@@ -80,10 +80,10 @@ module.exports = library.export(
 
         var happened = bridge.defineFunction(
           [makeRequest.defineOn(bridge)],
-          function happened(makeRequest, listId, text) {
+          function happened(makeRequest, listId, text, checked) {
             var path = "/release-checklist/"+listId+"/happened/"+encodeURIComponent(text)
 
-            makeRequest({method: "post", path: path})
+            makeRequest({method: "post", path: path, data: {isChecked: checked}})
 
           }
         ).withArgs(list.id)
@@ -155,10 +155,15 @@ module.exports = library.export(
 
         var id = request.params.id
         var text = request.params.text
-
-        releaseChecklist.checkOff(id, text)
-
-        tellTheUniverse("releaseChecklist.checkOff", id, text)
+        var isChecked = request.body.isChecked
+        
+        if (isChecked) {
+          releaseChecklist.checkOff(id, text)
+          tellTheUniverse("releaseChecklist.checkOff", id, text)
+        } else {
+          releaseChecklist.uncheck(id, text)
+          tellTheUniverse("releaseChecklist.uncheck", id, text)
+        }
 
         response.send({status: "ok"})
       })
