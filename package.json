@@ -6,7 +6,7 @@
   "dependencies": {
     "module-library": "*",
     "release-checklist": ">= 0.4.0",
-    "web-element": "*",
+    "web-element": ">= 0.63.0",
     "web-site": "*",
     "browser-bridge": "*",
     "tell-the-universe": "*",

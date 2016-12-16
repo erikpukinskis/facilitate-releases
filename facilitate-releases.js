@@ -85,6 +85,17 @@ module.exports = library.export(
 
             makeRequest({method: "post", path: path, data: {isChecked: checked}})
 
+            var countEl = document.querySelector(".complete-count")
+
+            var count = parseInt(countEl.innerText)
+
+            if (checked) {
+              count++
+            } else {
+              count--
+            }
+
+            countEl.innerHTML = count
           }
         ).withArgs(list.id)
 
@@ -106,15 +117,25 @@ module.exports = library.export(
         bridge.addToHead(makeItCheckable.stylesheet)
         bridge.addToHead(element.stylesheet(taskTemplate))
 
+        var completeCount = 0
+
         var tasks = list.tasks.map(
           function(text, i) {
-            return taskTemplate(list.id, text, list.tasksCompleted[i]||false)
+            var isComplete = list.tasksCompleted[i]||false
+            if (isComplete) {
+              completeCount++
+            }
+            return taskTemplate(list.id, text, isComplete)
           }
         )
 
+        var headline = element("h1", [list.story+" (",
+          element("span.complete-count", completeCount),
+          "/"+tasks.length+")"
+        ])
 
         var form = element("form", {method: "post", action: "/release-checklist/"+list.id+"/tasks"}, [
-          element("h1", list.story),
+          headline,
           tasks,
           element("p", "Enter items to check off:"),
           element("textarea", {name: "tasks"}),
@@ -156,7 +177,7 @@ module.exports = library.export(
         var id = request.params.id
         var text = request.params.text
         var isChecked = request.body.isChecked
-        
+
         if (isChecked) {
           releaseChecklist.checkOff(id, text)
           tellTheUniverse("releaseChecklist.checkOff", id, text)
