@@ -2,8 +2,8 @@ var library = require("module-library")(require)
 
 module.exports = library.export(
   "facilitate-releases",
-  ["release-checklist", "web-element", "browser-bridge", "tell-the-universe", "basic-styles", "./make-it-checkable", "make-request"],
-  function(releaseChecklist, element, BrowserBridge, tellTheUniverse, basicStyles, makeItCheckable, makeRequest) {
+  ["release-checklist", "web-element", "browser-bridge", "tell-the-universe", "basic-styles", "./make-it-checkable", "make-request", "./bond-plugin"],
+  function(releaseChecklist, element, BrowserBridge, tellTheUniverse, basicStyles, makeItCheckable, makeRequest, bondPlugin) {
 
     return function(site) {
 
@@ -26,9 +26,13 @@ module.exports = library.export(
         })
       }
 
-      releaseChecklist("Someone can build a house", "4uwzyf")
+      releaseChecklist("A 6x8 teensy house appears", "test")
 
-      releaseChecklist.addTask("4uwzyf", "project facilitator can write down a release checklist")
+      releaseChecklist.addTask("test", "Floor section built")
+
+      // releaseChecklist.tag("test", "Floor section built", "base floor section")
+      // releaseChecklist("Someone can build a house", "test")
+      // releaseChecklist.addTask("test", "project facilitator can write down a release checklist")
       // releaseChecklist.addTask("4uwzyf", "planner can add a project plan as a dependency to a task")
       // releaseChecklist.addTask("4uwzyf", "planner writes bond")
       // releaseChecklist.addTask("4uwzyf", "planner adds labor allocations to bond")
@@ -134,15 +138,25 @@ module.exports = library.export(
           "/"+tasks.length+")"
         ])
 
-        var form = element("form", {method: "post", action: "/release-checklist/"+list.id+"/tasks"}, [
+        var bondBridge = bridge.partial()
+        var tagData = {}
+
+        bondPlugin(list, bondBridge, registerTag)
+
+        function registerTag(identifier, data) {
+          tagData[identifier] = data
+        }
+
+        var page = element("form", {method: "post", action: "/release-checklist/"+list.id+"/tasks"}, [
           headline,
           tasks,
           element("p", "Enter items to check off:"),
           element("textarea", {name: "tasks"}),
           element("input", {type: "submit", value: "Add tasks"}),
+          bondBridge,
         ])
 
-        bridge.send(form)
+        bridge.send(page)
       }
 
       site.addRoute("post", "/release-checklist/:id/tasks", function(request, response) {
