@@ -2,7 +2,7 @@ var library = require("module-library")(require)
 
 module.exports = library.export(
   "facilitate-releases",
-  ["release-checklist", "web-element", "browser-bridge", "tell-the-universe", "basic-styles", "./make-it-checkable", "make-request", "./bond-plugin"],
+  ["release-checklist", "web-element", "browser-bridge", "tell-the-universe", "basic-styles", "make-it-checkable", "make-request", "./bond-plugin"],
   function(releaseChecklist, element, BrowserBridge, tellTheUniverse, basicStyles, makeItCheckable, makeRequest, bondPlugin) {
 
     return function(site) {

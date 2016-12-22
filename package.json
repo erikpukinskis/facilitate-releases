@@ -12,7 +12,8 @@
     "tell-the-universe": "*",
     "basic-styles": "*",
     "function-call": "*",
-    "make-request": "*"
+    "make-request": "*",
+    "make-it-checkable": "*"
   },
   "scripts": {
     "start": "node start.js"
