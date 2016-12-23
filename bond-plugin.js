@@ -49,12 +49,20 @@ module.exports = library.export(
           subtotal: hours*HOURLY})
 
       var items = invoice.lineItems.map(function(item) {
-        return element([item.description, " $"+toDollarString(item.subtotal)])
+        if (!item.description) {
+          console.log(JSON.stringify(item))
+          throw new Error()
+        }
+
+        return element([item.description+" $"+toDollarString(item.subtotal)])
       })
 
       var body = element([
         element("h2", "Construction Bond"),
         element(items),
+        element("Subtotal: $"+toDollarString(invoice.subtotal)),
+        element("Tax: $"+toDollarString(invoice.tax)),
+        element("Total: $"+toDollarString(invoice.total)),
         element(".button", "Issue bond"),
       ])
 
