@@ -58,11 +58,12 @@ module.exports = library.export(
       })
 
       var body = element([
-        element("h2", "Construction Bond"),
+        element("h1", list.story+" Bond"),
         element(items),
-        element("Subtotal: $"+toDollarString(invoice.subtotal)),
+        element("p", [
         element("Tax: $"+toDollarString(invoice.tax)),
-        element("Total: $"+toDollarString(invoice.total)),
+          element("Total: $"+toDollarString(invoice.total)),
+        ]),
         element(".button", "Issue bond"),
       ])
 

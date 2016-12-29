@@ -1,9 +1,126 @@
 var library = require("module-library")(require)
 
+library.define(
+  "task-template",
+  ["web-element", "make-it-checkable", "make-request"],
+  function(element, makeItCheckable, makeRequest) {
+
+    var happened
+
+    var taskTemplate = element.template(
+      ".task",
+      element.style({
+        "margin-bottom": "0.5em",
+      }),
+      function(bridge, listId, text, isComplete) {
+
+        prepareBridge(bridge)
+
+        this.addChild(text)
+
+        makeItCheckable(
+          this,
+          bridge,
+          happened.withArgs(listId, text),
+          {checked: isComplete}
+        )
+      }
+    )
+
+    function prepareBridge(bridge) {
+      if (bridge.__taskTemplateReady) {
+        return
+      }
+
+      happened = bridge.defineFunction(
+        [makeRequest.defineOn(bridge)], onTaskHappened
+      )
+
+      bridge.addToHead(makeItCheckable.stylesheet)
+
+      bridge.addToHead(element.stylesheet(taskTemplate))
+
+      bridge.__taskTemplateReady = true
+    }
+
+    function onTaskHappened(makeRequest, listId, text, checked) {
+      var path = "/release-checklist/"+listId+"/happened/"+encodeURIComponent(text)
+
+      makeRequest({method: "post", path: path, data: {isChecked: checked}})
+
+      var countEl = document.querySelector(".complete-count")
+
+      var count = parseInt(countEl.innerText)
+
+      if (checked) {
+        count++
+      } else {
+        count--
+      }
+
+      countEl.innerHTML = count
+    }
+
+    return taskTemplate
+  }
+)
+
+
+
+library.define(
+  "render-checklist",
+  ["task-template", "web-element", "./bond-plugin"],
+  function(taskTemplate, element, bondPlugin) {
+
+    function renderChecklist(list, bridge) {
+
+      var completeCount = 0
+
+      var tasks = list.tasks.map(
+        function(text, i) {
+          var isComplete = list.tasksCompleted[i]||false
+          if (isComplete) {
+            completeCount++
+          }
+          return taskTemplate(bridge, list.id, text, isComplete)
+        }
+      )
+
+      var headline = element("h1", [list.story+" (",
+        element("span.complete-count", completeCount),
+        "/"+tasks.length+")"
+      ])
+
+      var bondBridge = bridge.partial()
+      var tagData = {}
+
+      bondPlugin(list, bondBridge, registerTag)
+
+      function registerTag(identifier, data) {
+        tagData[identifier] = data
+      }
+
+      var page = element("form", {method: "post", action: "/release-checklist/"+list.id+"/tasks"}, [
+        headline,
+        tasks,
+        element("p", "Enter items to check off:"),
+        element("textarea", {name: "tasks"}),
+        element("input", {type: "submit", value: "Add tasks"}),
+        bondBridge,
+      ])
+
+      bridge.send(page)
+    }
+
+    return renderChecklist
+  }
+)
+
+
 module.exports = library.export(
   "facilitate-releases",
-  ["release-checklist", "web-element", "browser-bridge", "tell-the-universe", "basic-styles", "make-it-checkable", "make-request", "./bond-plugin"],
-  function(releaseChecklist, element, BrowserBridge, tellTheUniverse, basicStyles, makeItCheckable, makeRequest, bondPlugin) {
+  ["release-checklist", "web-element", "browser-bridge", "tell-the-universe", "basic-styles", "render-checklist"],
+  function(releaseChecklist, element, BrowserBridge, tellTheUniverse, basicStyles, renderChecklist) {
 
     return function(site) {
 
@@ -79,85 +196,6 @@ module.exports = library.export(
 
         renderChecklist(list, bridge)
       })
-
-      function renderChecklist(list, bridge) {
-
-        var happened = bridge.defineFunction(
-          [makeRequest.defineOn(bridge)],
-          function happened(makeRequest, listId, text, checked) {
-            var path = "/release-checklist/"+listId+"/happened/"+encodeURIComponent(text)
-
-            makeRequest({method: "post", path: path, data: {isChecked: checked}})
-
-            var countEl = document.querySelector(".complete-count")
-
-            var count = parseInt(countEl.innerText)
-
-            if (checked) {
-              count++
-            } else {
-              count--
-            }
-
-            countEl.innerHTML = count
-          }
-        ).withArgs(list.id)
-
-
-        var taskTemplate = element.template(
-          ".task",
-          element.style({
-            "margin-bottom": "0.5em",
-          }),
-          function(listId, text, isComplete) {
-            this.addChild(text)
-
-            var onChecked = happened.withArgs(text)
-
-            makeItCheckable(this, bridge, onChecked, {checked: isComplete})
-          }
-        )
-
-        bridge.addToHead(makeItCheckable.stylesheet)
-        bridge.addToHead(element.stylesheet(taskTemplate))
-
-        var completeCount = 0
-
-        var tasks = list.tasks.map(
-          function(text, i) {
-            var isComplete = list.tasksCompleted[i]||false
-            if (isComplete) {
-              completeCount++
-            }
-            return taskTemplate(list.id, text, isComplete)
-          }
-        )
-
-        var headline = element("h1", [list.story+" (",
-          element("span.complete-count", completeCount),
-          "/"+tasks.length+")"
-        ])
-
-        var bondBridge = bridge.partial()
-        var tagData = {}
-
-        bondPlugin(list, bondBridge, registerTag)
-
-        function registerTag(identifier, data) {
-          tagData[identifier] = data
-        }
-
-        var page = element("form", {method: "post", action: "/release-checklist/"+list.id+"/tasks"}, [
-          headline,
-          tasks,
-          element("p", "Enter items to check off:"),
-          element("textarea", {name: "tasks"}),
-          element("input", {type: "submit", value: "Add tasks"}),
-          bondBridge,
-        ])
-
-        bridge.send(page)
-      }
 
       site.addRoute("post", "/release-checklist/:id/tasks", function(request, response) {
         var lines = request.body.tasks.split("\n")
