@@ -13,7 +13,9 @@
     "basic-styles": "*",
     "function-call": "*",
     "make-request": "*",
-    "make-it-checkable": "*"
+    "make-it-checkable": "*",
+    "bridge-module": "*",
+    "scroll-to-select": "*"
   },
   "scripts": {
     "start": "node start.js"

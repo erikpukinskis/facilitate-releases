@@ -6,13 +6,15 @@ library.define(
   function(element, makeItCheckable, makeRequest) {
 
     var happened
+    var showTags
 
     var taskTemplate = element.template(
       ".task",
       element.style({
-        "margin-bottom": "0.5em",
+        "padding": "8px",
+        "display": "inline-block",
       }),
-      function(bridge, listId, text, isComplete) {
+      function(bridge, listId, text, isComplete, id) {
 
         prepareBridge(bridge)
 
@@ -24,6 +26,10 @@ library.define(
           happened.withArgs(listId, text),
           {checked: isComplete}
         )
+
+        this.id = "list-"+listId+"-task-"+id
+
+        this.onclick(showTags.withArgs(this.id))
       }
     )
 
@@ -33,8 +39,27 @@ library.define(
       }
 
       happened = bridge.defineFunction(
-        [makeRequest.defineOn(bridge)], onTaskHappened
-      )
+        [makeRequest.defineOn(bridge)], function onTaskHappened(makeRequest, listId, text, checked) {
+        var path = "/release-checklist/"+listId+"/happened/"+encodeURIComponent(text)
+
+        makeRequest({method: "post", path: path, data: {isChecked: checked}})
+
+        var countEl = document.querySelector(".complete-count")
+
+        var count = parseInt(countEl.innerText)
+
+        if (checked) {
+          count++
+        } else {
+          count--
+        }
+
+        countEl.innerHTML = count
+      })
+
+      showTags = bridge.defineFunction(function showTags(elementId) {
+
+      })
 
       bridge.addToHead(makeItCheckable.stylesheet)
 
@@ -43,23 +68,7 @@ library.define(
       bridge.__taskTemplateReady = true
     }
 
-    function onTaskHappened(makeRequest, listId, text, checked) {
-      var path = "/release-checklist/"+listId+"/happened/"+encodeURIComponent(text)
-
-      makeRequest({method: "post", path: path, data: {isChecked: checked}})
-
-      var countEl = document.querySelector(".complete-count")
-
-      var count = parseInt(countEl.innerText)
-
-      if (checked) {
-        count++
-      } else {
-        count--
-      }
-
-      countEl.innerHTML = count
-    }
+    
 
     return taskTemplate
   }
@@ -69,12 +78,13 @@ library.define(
 
 library.define(
   "render-checklist",
-  ["task-template", "web-element", "./bond-plugin"],
-  function(taskTemplate, element, bondPlugin) {
+  ["task-template", "web-element", "./bond-plugin", "scroll-to-select", "bridge-module"],
+  function(taskTemplate, element, bondPlugin, scrollToSelect, bridgeModule) {
 
     function renderChecklist(list, bridge) {
 
       var completeCount = 0
+      var taskIds = []
 
       var tasks = list.tasks.map(
         function(text, i) {
@@ -82,14 +92,36 @@ library.define(
           if (isComplete) {
             completeCount++
           }
-          return taskTemplate(bridge, list.id, text, isComplete)
+          var taskEl = taskTemplate(bridge, list.id, text, i,  isComplete)
+
+          taskIds.push(taskEl.id)
+
+          return taskEl
         }
       )
 
-      var headline = element("h1", [list.story+" (",
-        element("span.complete-count", completeCount),
-        "/"+tasks.length+")"
-      ])
+      var showTaskDetails = bridge.defineFunction(function(id) {
+        console.log("show tags")
+      })
+
+      bridge.asap(
+        bridgeModule(library, "scroll-to-select", bridge)
+        .withArgs({
+          ids: taskIds,
+          onSelect: showTaskDetails,
+          text: "HIEEE"
+        })
+      )
+
+      var headline = element(
+        "h1",
+        element.style({"margin-top": "200px"}), 
+        [
+          list.story+" (",
+          element("span.complete-count", completeCount),
+          "/"+tasks.length+")"
+        ]
+      )
 
       var bondBridge = bridge.partial()
       var tagData = {}
@@ -163,6 +195,8 @@ module.exports = library.export(
       var baseBridge = new BrowserBridge()
 
       baseBridge.addToHead(basicStyles)
+
+      baseBridge.requestHandler(storyForm)
 
       site.addRoute(
         "get",
