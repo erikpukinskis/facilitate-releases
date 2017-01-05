@@ -3,11 +3,47 @@ var library = require("module-library")(require)
 
 library.define(
   "task-template",
-  ["web-element", "make-it-checkable", "make-request"],
-  function(element, makeItCheckable, makeRequest) {
+  ["web-element", "make-it-checkable", "make-request", "add-html", "./dasherize"],
+  function(element, makeItCheckable, makeRequest, addHtml, dasherize) {
 
     var happened
     var showTags
+
+    var tagTemplate = element.style(
+      ".tag", 
+      {
+        "background": "#bfb6c5",
+        "color": "white",
+        "padding": "3px 6px 2px 5px",
+        "display": "inline-block",
+        "border-radius": "2px",
+        "font-size": "0.76em",
+        "text-transform": "uppercase",
+        "vertical-align": "2px",
+        "margin-left": "0.5em",
+        "letter-spacing": "-0.08em",
+        "font-weight": "bold",
+        "box-shadow": "-3px 0px 0 #f2f1ff",
+      }
+    )
+
+    var tagToggleTemplate = element.template(".toggle-button",
+      function(bridge, tagText, listId, tagsSelector) {
+
+        this.addChild(tagText)
+
+        var toggleTag = bridge.__taskTemplateToggleTagBinding
+
+        var tagId = dasherize(tagText)
+
+        makeItCheckable(
+          this,
+          bridge,
+          toggleTag.withArgs(listId, tagText, tagId, tagsSelector),
+          {kind: "toggle-button"}
+        )
+      }
+    )
 
     var taskTemplate = element.template(
       ".task",
@@ -17,7 +53,11 @@ library.define(
       }),
       function(bridge, list, text, isComplete, id) {
 
+        var tagsEl = element("span.tags")
+        tagsEl.assignId()
+
         this.addChild(text)
+        this.addChild(tagsEl)
 
         makeItCheckable(
           this,
@@ -28,14 +68,10 @@ library.define(
 
         this.id = "list-"+list.id+"-task-"+id
 
-        var tagTemplate = element.template(".tag.toggle-button",
-          function(identifier) {
-            this.addChild(identifier)
-            makeItCheckable(this, bridge, bridge.__taskTemplateToggleTagBinding.withArgs(list.id, identifier), {kind: "toggle-button"})
+        var tagToggles = list.tags.map(function(text) {
+            return tagToggleTemplate(bridge, text, list.id, "#"+tagsEl.id)
           }
         )
-
-        var tags = list.tags.map(tagTemplate)
 
         console.log(list.tags.length, "tags")
 
@@ -43,7 +79,7 @@ library.define(
           element.style({
             "display": "none"
           }),
-          tags
+          tagToggles
         )
 
         details.id = this.id+"-details"
@@ -57,44 +93,62 @@ library.define(
       }
 
       bridge.__taskTemplateToggleTagBinding = bridge.defineFunction(
-        [makeRequest.defineOn(bridge)],
-        function(makeRequest, listId, identifier, isChecked) {
-
-          makeRequest({
-            method: "post",
-            path: "/release-checklist/"+listId+"/tags/"+encodeURIComponent(identifier),
-            data: {isTagged: true},
-          })
-
-          console.log("tag", identifier, "is checked:", isChecked)
-        }
-      )
+        [makeRequest.defineOn(bridge), addHtml.defineOn(bridge)], toggleTag)
 
       bridge.__taskTemplateOnTaskHappenedBinding = bridge.defineFunction(
-        [makeRequest.defineOn(bridge)], function onTaskHappened(makeRequest, listId, text, checked) {
-        var path = "/release-checklist/"+listId+"/happened/"+encodeURIComponent(text)
-
-        makeRequest({method: "post", path: path, data: {isChecked: checked}})
-
-        var countEl = document.querySelector(".complete-count")
-
-        var count = parseInt(countEl.innerText)
-
-        if (checked) {
-          count++
-        } else {
-          count--
-        }
-
-        countEl.innerHTML = count
-      })
+        [makeRequest.defineOn(bridge)], onTaskHappened)
 
       bridge.addToHead(makeItCheckable.stylesheet)
 
       bridge.addToHead(element.stylesheet(taskTemplate))
 
+      console.log("adding tag template!")
+      bridge.addToHead(element.stylesheet(tagTemplate))
+
       bridge.__taskTemplateReady = true
     }
+
+    function onTaskHappened(makeRequest, listId, text, checked) {
+      var path = "/release-checklist/"+listId+"/happened/"+encodeURIComponent(text)
+
+      makeRequest({method: "post", path: path, data: {isChecked: checked}})
+
+      var countEl = document.querySelector(".complete-count")
+
+      var count = parseInt(countEl.innerText)
+
+      if (checked) {
+        count++
+      } else {
+        count--
+      }
+
+      countEl.innerHTML = count
+    }
+
+    function toggleTag(makeRequest, addHtml, listId, text, tagId, tagsSelector, isChecked) {
+
+      try {
+        var tagEl = document.querySelector(tagsSelector+" ."+tagId)
+      } catch(e) {}
+
+      if (tagEl && !isChecked) {
+        tagEl.style.display = "none"
+      } else if (tagEl && isChecked) {
+        tagEl.style.display = "inline-block"
+      } else if (!tagEl && isChecked) {
+        addHtml.inside(tagsSelector, "<div class=\"tag "+tagId+"\">"+text+"</div>")
+      }
+
+      makeRequest({
+        method: "post",
+        path: "/release-checklist/"+listId+"/tags/"+encodeURIComponent(tagId),
+        data: {isTagged: true},
+      })
+
+      console.log("tag", tagId, "is checked:", isChecked)
+    }
+
 
     taskTemplate.prepareBridge = prepareBridge
 
@@ -191,7 +245,6 @@ module.exports = library.export(
 
     return function(site) {
 
-
       tellTheUniverse = tellTheUniverse
         .called("project-process")
         .withNames({
@@ -242,13 +295,13 @@ module.exports = library.export(
 
       site.addRoute(
         "post",
-        "/release-checklist/:listId/tags/:tagIdentifier",
+        "/release-checklist/:listId/tags/:tagId",
         function(request, response) {
           if (request.body.isTagged) {
-            console.log("list", request.params.listId, "add tag", request.params.tagIdentifier)
+            console.log("list", request.params.listId, "add tag", request.params.tagId)
             // tellTheUniverse("releaseChecklist.addTag", ...)
           } else {
-            console.log("list", request.params.listId, "remove tag", request.params.tagIdentifier)
+            console.log("list", request.params.listId, "remove tag", request.params.tagId)
             // tellTheUniverse("releaseChecklist.removeTag", ...)
           }
           response.send({ok: true})

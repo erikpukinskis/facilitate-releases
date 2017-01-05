@@ -15,7 +15,8 @@
     "make-request": "*",
     "make-it-checkable": "*",
     "bridge-module": "*",
-    "scroll-to-select": "*"
+    "scroll-to-select": "*",
+    "add-html": "*"
   },
   "scripts": {
     "start": "node start.js"
