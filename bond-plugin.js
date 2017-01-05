@@ -7,9 +7,9 @@ module.exports = library.export(
     var HOURLY = 2000
     var HOUSE_PER_SECTION = 8
 
-    return function(list, bridge, registerTag) {
+    return function(list, bridge) {
 
-      registerTag(
+      list.registerTag(
         "base floor section",
         {
           xSize: 48,
@@ -24,7 +24,7 @@ module.exports = library.export(
       //   "base floor section"
       // )
 
-      registerTag("2ft floor extension", {
+      list.registerTag("2ft floor extension", {
         xSize: 24,
         zSize: 96,
         join: "left",

@@ -1,5 +1,6 @@
 var library = require("module-library")(require)
 
+
 library.define(
   "task-template",
   ["web-element", "make-it-checkable", "make-request"],
@@ -14,22 +15,39 @@ library.define(
         "padding": "8px",
         "display": "inline-block",
       }),
-      function(bridge, listId, text, isComplete, id) {
-
-        prepareBridge(bridge)
+      function(bridge, list, text, isComplete, id) {
 
         this.addChild(text)
 
         makeItCheckable(
           this,
           bridge,
-          happened.withArgs(listId, text),
+          bridge.__taskTemplateOnTaskHappenedBinding.withArgs(list.id, text),
           {checked: isComplete}
         )
 
-        this.id = "list-"+listId+"-task-"+id
+        this.id = "list-"+list.id+"-task-"+id
 
-        this.onclick(showTags.withArgs(this.id))
+        var tagTemplate = element.template(".tag.toggle-button",
+          function(identifier) {
+            this.addChild(identifier)
+            makeItCheckable(this, bridge, bridge.__taskTemplateToggleTagBinding.withArgs(list.id, identifier), {kind: "toggle-button"})
+          }
+        )
+
+        var tags = list.tags.map(tagTemplate)
+
+        console.log(list.tags.length, "tags")
+
+        var details = element(
+          element.style({
+            "display": "none"
+          }),
+          tags
+        )
+
+        details.id = this.id+"-details"
+        this.addChild(details)
       }
     )
 
@@ -38,7 +56,21 @@ library.define(
         return
       }
 
-      happened = bridge.defineFunction(
+      bridge.__taskTemplateToggleTagBinding = bridge.defineFunction(
+        [makeRequest.defineOn(bridge)],
+        function(makeRequest, listId, identifier, isChecked) {
+
+          makeRequest({
+            method: "post",
+            path: "/release-checklist/"+listId+"/tags/"+encodeURIComponent(identifier),
+            data: {isTagged: true},
+          })
+
+          console.log("tag", identifier, "is checked:", isChecked)
+        }
+      )
+
+      bridge.__taskTemplateOnTaskHappenedBinding = bridge.defineFunction(
         [makeRequest.defineOn(bridge)], function onTaskHappened(makeRequest, listId, text, checked) {
         var path = "/release-checklist/"+listId+"/happened/"+encodeURIComponent(text)
 
@@ -57,10 +89,6 @@ library.define(
         countEl.innerHTML = count
       })
 
-      showTags = bridge.defineFunction(function showTags(elementId) {
-
-      })
-
       bridge.addToHead(makeItCheckable.stylesheet)
 
       bridge.addToHead(element.stylesheet(taskTemplate))
@@ -68,7 +96,7 @@ library.define(
       bridge.__taskTemplateReady = true
     }
 
-    
+    taskTemplate.prepareBridge = prepareBridge
 
     return taskTemplate
   }
@@ -83,8 +111,20 @@ library.define(
 
     function renderChecklist(list, bridge) {
 
+
+      // Bond
+
+      var bondBridge = bridge.partial()
+
+      bondPlugin(list, bondBridge)
+
+
+      // Tasks
+
       var completeCount = 0
       var taskIds = []
+
+      taskTemplate.prepareBridge(bridge)
 
       var tasks = list.tasks.map(
         function(text, i) {
@@ -92,7 +132,7 @@ library.define(
           if (isComplete) {
             completeCount++
           }
-          var taskEl = taskTemplate(bridge, list.id, text, i,  isComplete)
+          var taskEl = taskTemplate(bridge, list, text, isComplete, i)
 
           taskIds.push(taskEl.id)
 
@@ -100,8 +140,12 @@ library.define(
         }
       )
 
-      var showTaskDetails = bridge.defineFunction(function(id) {
-        console.log("show tags")
+      var showTaskDetails = bridge.defineFunction(function showTaskDetails(el) {
+        document.getElementById(el.id+"-details").style.display = "block"
+      })
+
+      var hideTaskDetails = bridge.defineFunction(function hideTaskDetails(el) {
+        document.getElementById(el.id+"-details").style.display = "none"
       })
 
       bridge.asap(
@@ -109,6 +153,7 @@ library.define(
         .withArgs({
           ids: taskIds,
           onSelect: showTaskDetails,
+          onUnselect: hideTaskDetails,
           text: "HIEEE"
         })
       )
@@ -123,15 +168,6 @@ library.define(
         ]
       )
 
-      var bondBridge = bridge.partial()
-      var tagData = {}
-
-      bondPlugin(list, bondBridge, registerTag)
-
-      function registerTag(identifier, data) {
-        tagData[identifier] = data
-      }
-
       var page = element("form", {method: "post", action: "/release-checklist/"+list.id+"/tasks"}, [
         headline,
         tasks,
@@ -140,7 +176,6 @@ library.define(
         element("input", {type: "submit", value: "Add tasks"}),
         bondBridge,
       ])
-
       bridge.send(page)
     }
 
@@ -155,6 +190,7 @@ module.exports = library.export(
   function(releaseChecklist, element, BrowserBridge, tellTheUniverse, basicStyles, renderChecklist) {
 
     return function(site) {
+
 
       tellTheUniverse = tellTheUniverse
         .called("project-process")
@@ -202,6 +238,21 @@ module.exports = library.export(
         "get",
         "/release-checklist",
         baseBridge.requestHandler(storyForm)
+      )
+
+      site.addRoute(
+        "post",
+        "/release-checklist/:listId/tags/:tagIdentifier",
+        function(request, response) {
+          if (request.body.isTagged) {
+            console.log("list", request.params.listId, "add tag", request.params.tagIdentifier)
+            // tellTheUniverse("releaseChecklist.addTag", ...)
+          } else {
+            console.log("list", request.params.listId, "remove tag", request.params.tagIdentifier)
+            // tellTheUniverse("releaseChecklist.removeTag", ...)
+          }
+          response.send({ok: true})
+        }
       )
 
       var storyBridge
