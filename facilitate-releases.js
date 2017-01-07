@@ -9,9 +9,9 @@ library.define(
     var happened
     var showTags
 
-    var tagTemplate = element.style(
+    var tagTemplate = element.template(
       ".tag", 
-      {
+      element.style({
         "background": "#bfb6c5",
         "color": "white",
         "padding": "3px 6px 2px 5px",
@@ -24,22 +24,23 @@ library.define(
         "letter-spacing": "-0.08em",
         "font-weight": "bold",
         "box-shadow": "-3px 0px 0 #f2f1ff",
+      }),
+      function(text) {
+        this.addChild(text)
       }
     )
 
     var tagToggleTemplate = element.template(".toggle-button",
-      function(bridge, tagText, listId, tagsSelector) {
+      function(bridge, onToggle, tagText, tagId) {
 
         this.addChild(tagText)
-
-        var toggleTag = bridge.__taskTemplateToggleTagBinding
 
         var tagId = dasherize(tagText)
 
         makeItCheckable(
           this,
           bridge,
-          toggleTag.withArgs(listId, tagText, tagId, tagsSelector),
+          onToggle.withArgs(tagText, tagId),
           {kind: "toggle-button"}
         )
       }
@@ -51,9 +52,15 @@ library.define(
         "padding": "8px",
         "display": "inline-block",
       }),
-      function(bridge, list, text, isComplete, id) {
+      function(bridge, list, text, tags, isComplete, taskId) {
 
-        var tagsEl = element("span.tags")
+        if (tags[0] && tags[0].match(/-/)) {
+          throw new Error("tag text has a dash!")
+        }
+
+        console.log(""+tags.length+" tags")
+        var tagsEl = element("span.tags", tags.map(tagTemplate))
+
         tagsEl.assignId()
 
         this.addChild(text)
@@ -62,18 +69,21 @@ library.define(
         makeItCheckable(
           this,
           bridge,
-          bridge.__taskTemplateOnTaskHappenedBinding.withArgs(list.id, text),
+          bridge.__taskTemplateOnTaskHappenedBinding.withArgs(list.taskId, text),
           {checked: isComplete}
         )
 
-        this.id = "list-"+list.id+"-task-"+id
+        this.id = "list-"+list.id+"-task-"+taskId
 
-        var tagToggles = list.tags.map(function(text) {
-            return tagToggleTemplate(bridge, text, list.id, "#"+tagsEl.id)
+        var tagsSelector = "#"+tagsEl.id
+
+        var onToggle = bridge.__taskTemplateToggleTagBinding.withArgs(list.id, taskId, tagsSelector)
+
+        var tagToggles = list.tags.map(function(tagText) {
+            var tagId = dasherize(tagText)
+            return tagToggleTemplate(bridge, onToggle, tagText, tagId)
           }
         )
-
-        console.log(list.tags.length, "tags")
 
         var details = element(
           element.style({
@@ -102,7 +112,6 @@ library.define(
 
       bridge.addToHead(element.stylesheet(taskTemplate))
 
-      console.log("adding tag template!")
       bridge.addToHead(element.stylesheet(tagTemplate))
 
       bridge.__taskTemplateReady = true
@@ -126,7 +135,7 @@ library.define(
       countEl.innerHTML = count
     }
 
-    function toggleTag(makeRequest, addHtml, listId, text, tagId, tagsSelector, isChecked) {
+    function toggleTag(makeRequest, addHtml, listId, taskId, tagsSelector, tagText, tagId, isChecked) {
 
       try {
         var tagEl = document.querySelector(tagsSelector+" ."+tagId)
@@ -137,16 +146,14 @@ library.define(
       } else if (tagEl && isChecked) {
         tagEl.style.display = "inline-block"
       } else if (!tagEl && isChecked) {
-        addHtml.inside(tagsSelector, "<div class=\"tag "+tagId+"\">"+text+"</div>")
+        addHtml.inside(tagsSelector, "<div class=\"tag "+tagId+"\">"+tagText+"</div>")
       }
 
       makeRequest({
         method: "post",
-        path: "/release-checklist/"+listId+"/tags/"+encodeURIComponent(tagId),
-        data: {isTagged: true},
+        path: "/release-checklist/"+listId+"/tasks/"+taskId+"/tags/"+encodeURIComponent(tagText),
+        data: {shouldBeTagged: true},
       })
-
-      console.log("tag", tagId, "is checked:", isChecked)
     }
 
 
@@ -160,8 +167,8 @@ library.define(
 
 library.define(
   "render-checklist",
-  ["task-template", "web-element", "./bond-plugin", "scroll-to-select", "bridge-module"],
-  function(taskTemplate, element, bondPlugin, scrollToSelect, bridgeModule) {
+  ["task-template", "web-element", "./bond-plugin", "scroll-to-select", "bridge-module", "dasherize"],
+  function(taskTemplate, element, bondPlugin, scrollToSelect, bridgeModule, dasherize) {
 
     function renderChecklist(list, bridge) {
 
@@ -181,12 +188,18 @@ library.define(
       taskTemplate.prepareBridge(bridge)
 
       var tasks = list.tasks.map(
-        function(text, i) {
-          var isComplete = list.tasksCompleted[i]||false
+        function(text) {
+          var taskId = dasherize(text)
+
+          var isComplete = list.taskIsCompleted(text)||false
+
+          var tags = list.tagsForTask(taskId)
+
           if (isComplete) {
             completeCount++
           }
-          var taskEl = taskTemplate(bridge, list, text, isComplete, i)
+
+          var taskEl = taskTemplate(bridge, list, text, tags, isComplete, taskId)
 
           taskIds.push(taskEl.id)
 
@@ -268,13 +281,6 @@ module.exports = library.export(
 
       releaseChecklist.addTask("test", "Floor section built")
 
-      // releaseChecklist.tag("test", "Floor section built", "base floor section")
-      // releaseChecklist("Someone can build a house", "test")
-      // releaseChecklist.addTask("test", "project facilitator can write down a release checklist")
-      // releaseChecklist.addTask("4uwzyf", "planner can add a project plan as a dependency to a task")
-      // releaseChecklist.addTask("4uwzyf", "planner writes bond")
-      // releaseChecklist.addTask("4uwzyf", "planner adds labor allocations to bond")
-
       var storyForm = element("form", {method: "post", action: "/stories"}, [
         element("p", "Tell a story."),
         element("input", {type: "text", name: "story", placeholder: "Type what should happen"}),
@@ -293,15 +299,26 @@ module.exports = library.export(
         baseBridge.requestHandler(storyForm)
       )
 
+      "/release-checklist/test/tasks/0/tags/base-floor-section"
+      "/release-checklist/:listId/tasks/:task-id/tags/:tagId"
+
+
       site.addRoute(
         "post",
-        "/release-checklist/:listId/tags/:tagId",
+        "/release-checklist/:listId/tasks/:taskId/tags/:tagText",
         function(request, response) {
-          if (request.body.isTagged) {
-            console.log("list", request.params.listId, "add tag", request.params.tagId)
+          var list = releaseChecklist.get(request.params.listId)
+          var tagText = request.params.tagText
+          var shouldBeTagged = request.body.shouldBeTagged
+          var task = request.params.taskId
+          var hasTag = list.hasTag(task, tagText)
+          var taskId = request.params.taskId
+
+          if (shouldBeTagged && !hasTag) {
+            releaseChecklist.tag(list, taskId, tagText)
             // tellTheUniverse("releaseChecklist.addTag", ...)
-          } else {
-            console.log("list", request.params.listId, "remove tag", request.params.tagId)
+          } else if (hasTag && !shouldBeTagged) {
+            releaseChecklist.untag(list, taskId, tagId)
             // tellTheUniverse("releaseChecklist.removeTag", ...)
           }
           response.send({ok: true})

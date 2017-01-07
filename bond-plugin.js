@@ -36,7 +36,8 @@ module.exports = library.export(
       list.eachTagged(
         "base floor section",
         function(data) {
-          plan.add(floorSection, data)
+          console.log("we're actually adding a floor section here!")
+          // plan.add(floorSection, data)
           hours += HOUSE_PER_SECTION
         }
       )
