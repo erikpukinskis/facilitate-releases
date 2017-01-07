@@ -294,6 +294,8 @@ module.exports = library.export(
 
       releaseChecklist.addTask("test", "Floor section built")
 
+      releaseChecklist.tag("test", "floor section built", "base floor section")
+      
       var storyForm = element("form", {method: "post", action: "/stories"}, [
         element("p", "Tell a story."),
         element("input", {type: "text", name: "story", placeholder: "Type what should happen"}),
@@ -329,7 +331,7 @@ module.exports = library.export(
 
           if (shouldBeTagged && !hasTag) {
             releaseChecklist.tag(list, taskId, tagText)
-            // tellTheUniverse("releaseChecklist.addTag", ...)
+            tellTheUniverse("releaseChecklist.tag", list.id, taskId, tagText)
           } else if (hasTag && !shouldBeTagged) {
             releaseChecklist.untag(list, taskId, tagId)
             // tellTheUniverse("releaseChecklist.removeTag", ...)
