@@ -26,6 +26,7 @@ library.define(
         "box-shadow": "-3px 0px 0 #f2f1ff",
       }),
       function(text) {
+        this.classes.push("tag-"+dasherize(text))
         this.addChild(text)
       }
     )
@@ -151,7 +152,7 @@ library.define(
     function toggleTag(makeRequest, addHtml, listId, taskId, tagsSelector, tagText, tagId, isChecked) {
 
       try {
-        var tagEl = document.querySelector(tagsSelector+" ."+tagId)
+        var tagEl = document.querySelector(".tag-"+tagId)
       } catch(e) {}
 
       if (tagEl && !isChecked) {
@@ -159,13 +160,13 @@ library.define(
       } else if (tagEl && isChecked) {
         tagEl.style.display = "inline-block"
       } else if (!tagEl && isChecked) {
-        addHtml.inside(tagsSelector, "<div class=\"tag "+tagId+"\">"+tagText+"</div>")
+        addHtml.inside(tagsSelector, "<div class=\"tag tag-"+tagId+"\">"+tagText+"</div>")
       }
 
       makeRequest({
         method: "post",
         path: "/release-checklist/"+listId+"/tasks/"+taskId+"/tags/"+encodeURIComponent(tagText),
-        data: {shouldBeTagged: true},
+        data: {shouldBeTagged: isChecked},
       })
     }
 
@@ -295,7 +296,7 @@ module.exports = library.export(
       releaseChecklist.addTask("test", "Floor section built")
 
       releaseChecklist.tag("test", "floor section built", "base floor section")
-      
+
       var storyForm = element("form", {method: "post", action: "/stories"}, [
         element("p", "Tell a story."),
         element("input", {type: "text", name: "story", placeholder: "Type what should happen"}),
@@ -333,8 +334,8 @@ module.exports = library.export(
             releaseChecklist.tag(list, taskId, tagText)
             tellTheUniverse("releaseChecklist.tag", list.id, taskId, tagText)
           } else if (hasTag && !shouldBeTagged) {
-            releaseChecklist.untag(list, taskId, tagId)
-            // tellTheUniverse("releaseChecklist.removeTag", ...)
+            releaseChecklist.untag(list, taskId, tagText)
+            tellTheUniverse("  releaseChecklist.untag", list.id, taskId, tagText)
           }
           response.send({ok: true})
         }
