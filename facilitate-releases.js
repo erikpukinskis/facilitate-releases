@@ -31,7 +31,7 @@ library.define(
     )
 
     var tagToggleTemplate = element.template(".toggle-button",
-      function(bridge, onToggle, tagText, tagId) {
+      function(bridge, onToggle, tagText, tagId, isTagged) {
 
         this.addChild(tagText)
 
@@ -43,6 +43,10 @@ library.define(
           onToggle.withArgs(tagText, tagId),
           {kind: "toggle-button"}
         )
+
+        if (isTagged) {
+          this.addSelector(".is-checked")
+        }
       }
     )
 
@@ -52,7 +56,7 @@ library.define(
         "padding": "8px",
         "display": "inline-block",
       }),
-      function(bridge, list, text, tags, isComplete, taskId) {
+      function(bridge, list, taskText, tags, isComplete, taskId) {
 
         if (tags[0] && tags[0].match(/-/)) {
           throw new Error("tag text has a dash!")
@@ -63,13 +67,13 @@ library.define(
 
         tagsEl.assignId()
 
-        this.addChild(text)
+        this.addChild(taskText)
         this.addChild(tagsEl)
 
         makeItCheckable(
           this,
           bridge,
-          bridge.__taskTemplateOnTaskHappenedBinding.withArgs(list.taskId, text),
+          bridge.__taskTemplateOnTaskHappenedBinding.withArgs(list.taskId, taskText),
           {checked: isComplete}
         )
 
@@ -79,9 +83,18 @@ library.define(
 
         var onToggle = bridge.__taskTemplateToggleTagBinding.withArgs(list.id, taskId, tagsSelector)
 
-        var tagToggles = list.tags.map(function(tagText) {
+
+        var tagToggles = list.tags.map(
+          function(tagText) {
+
+            var isTagged = list.hasTag(taskText, tagText)
+            console.log("is", taskText, "tagged", tagText, "?", JSON.stringify(isTagged))
+
             var tagId = dasherize(tagText)
-            return tagToggleTemplate(bridge, onToggle, tagText, tagId)
+
+            var el = tagToggleTemplate(bridge, onToggle, tagText, tagId, isTagged)
+
+            return el
           }
         )
 
