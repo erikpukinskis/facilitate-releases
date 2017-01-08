@@ -144,9 +144,6 @@ library.define(
     SetOfMaterials.prototype.cut =
       function(material, cut, size, options) {
         var name = options.name
-        if (name == "left-wall-A-top-track") {
-          console.log("left-wall-A-top-track", options)
-        }
         if (material.cut && cut != material.cut) {
           throw new Error("trying to cut material the wrong way")
         }
@@ -214,13 +211,13 @@ module.exports = library.export(
   function(SetOfMaterials, HousePlan) {
 
     function allocateMaterials(plan) {
-      var set = new SetOfMaterials()
+      var materials = new SetOfMaterials()
 
-      var getHandler = getMaterialHandler.bind(null, set)
+      var getHandler = getMaterialHandler.bind(null, materials)
 
       plan.generate(getHandler)
 
-      return set
+      return materials
     }
 
     function getMaterialHandler(materials, name) {

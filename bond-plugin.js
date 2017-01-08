@@ -7,7 +7,8 @@ module.exports = library.export(
     var HOURLY = 2000
     var HOUSE_PER_SECTION = 8
 
-    return function(list, bridge) {
+    function register(list) {
+      if (list.__bondPlugingRegisteredTags) { return }
 
       list.registerTag(
         "base floor section",
@@ -18,26 +19,28 @@ module.exports = library.export(
         }
       )
 
-      // releaseChecklist.tag(
-      //   "chkfasd",
-      //   "Build floor A",
-      //   "base floor section"
-      // )
-
       list.registerTag("2ft floor extension", {
         xSize: 24,
         zSize: 96,
         join: "left",
       })
 
+      list.__bondPlugingRegisteredTags = true
+    }
+
+    return function(list, bridge) {
+
+      register(list)
+
       var plan = new HousePlan()
       var hours = 0
 
       list.eachTagged(
         "base floor section",
-        function(data) {
-          console.log("we're actually adding a floor section here!")
-          // plan.add(floorSection, data)
+        function(task, data) {
+          console.log("we're actually adding a floor section here!", JSON.stringify(data, null,2))
+          if (data == 0) { throw new Error("data is not an object") }
+          plan.add(floorSection, data)
           hours += HOUSE_PER_SECTION
         }
       )

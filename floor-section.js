@@ -14,7 +14,7 @@ module.exports = library.export(
     function floorSection(section, plywood, stud, insulation, flooring, trim, options) {
 
       if (!options.zSize) {
-        console.log(options)
+        console.log("options", options)
         throw new Error("floor section must have a zSize")
       }
 

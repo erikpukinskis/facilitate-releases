@@ -56,14 +56,10 @@ library.define(
       element.style({
         "padding": "8px",
         "display": "inline-block",
+        "width": "100%",
       }),
       function(bridge, list, taskText, tags, isComplete, taskId) {
 
-        if (tags[0] && tags[0].match(/-/)) {
-          throw new Error("tag text has a dash!")
-        }
-
-        console.log(""+tags.length+" tags")
         var tagsEl = element("span.tags", tags.map(tagTemplate))
 
         tagsEl.assignId()
@@ -89,7 +85,6 @@ library.define(
           function(tagText) {
 
             var isTagged = list.hasTag(taskText, tagText)
-            console.log("is", taskText, "tagged", tagText, "?", JSON.stringify(isTagged))
 
             var tagId = dasherize(tagText)
 
