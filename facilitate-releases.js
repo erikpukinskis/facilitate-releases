@@ -60,9 +60,12 @@ library.define(
       }),
       function(bridge, list, taskText, tags, isComplete, taskId) {
 
-        var tagsEl = element("span.tags", tags.map(tagTemplate))
+        if (taskId.match(/ /)) {
+          throw new Error("space in task id!")
+        }
+        var tagsSelector = ".tags-for-"+taskId
 
-        tagsEl.assignId()
+        var tagsEl = element("span.tags"+tagsSelector, tags.map(tagTemplate))
 
         this.addChild(taskText)
         this.addChild(tagsEl)
@@ -76,10 +79,7 @@ library.define(
 
         this.id = "list-"+list.id+"-task-"+taskId
 
-        var tagsSelector = "#"+tagsEl.id
-
         var onToggle = bridge.__taskTemplateToggleTagBinding.withArgs(list.id, taskId, tagsSelector)
-
 
         var tagToggles = list.tags.map(
           function(tagText) {
@@ -147,7 +147,7 @@ library.define(
     function toggleTag(makeRequest, addHtml, listId, taskId, tagsSelector, tagText, tagId, isChecked) {
 
       try {
-        var tagEl = document.querySelector(".tag-"+tagId)
+        var tagEl = document.querySelector(tagsSelector+" .tag-"+tagId)
       } catch(e) {}
 
       if (tagEl && !isChecked) {
@@ -176,7 +176,7 @@ library.define(
 
 library.define(
   "render-checklist",
-  ["task-template", "web-element", "./bond-plugin", "scroll-to-select", "bridge-module", "dasherize"],
+  ["task-template", "web-element", "./bond-plugin", "scroll-to-select", "bridge-module", "./dasherize"],
   function(taskTemplate, element, bondPlugin, scrollToSelect, bridgeModule, dasherize) {
 
     function renderChecklist(list, bridge) {
@@ -198,6 +198,7 @@ library.define(
 
       var tasks = list.tasks.map(
         function(text) {
+
           var taskId = dasherize(text)
 
           var isComplete = list.taskIsCompleted(text)||false

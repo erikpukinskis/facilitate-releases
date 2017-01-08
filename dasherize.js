@@ -1,49 +1,49 @@
-module.exports = dasherize
+module.exports = dashify
 
-function dasherize(camelCase) {
-  var word = null
-  var words = []
-  var wordStarted = false
+function dashify(string) {
+  if (typeof string !== 'string') {
+    throw new TypeError('expected a string');
+  }
 
-  for(var i=0; i<camelCase.length; i++) {
-    var char = camelCase[i]
-    var upper = char.toUpperCase()
-    var lower = char.toLowerCase()
-    var isLetter = upper != lower
-    var isNumber = !Number.isNaN(parseFloat(char))
-    var isAlphaNumeric = isLetter || isNumber
+  var sentence = [];
+  var needsDash = false;
+
+  for(var i=0; i<string.length; i++) {
+    var char = string[i];
+
+    var isNumber = !Number.isNaN(parseFloat(char));
+
     if (isNumber) {
-      var isUpper = false
-      var isLower = true
-    } else if (isLetter) {
-      var isUpper = (char == upper)
-      var isLower = !isUpper
+      lower = char;
     } else {
-      var isUpper = false
-      var isLower = false
+      var upper = char.toUpperCase();
+      var lower = char.toLowerCase();
+      var isLetter = upper != lower;
+    } 
+
+    var isAlphaNumeric = isNumber || isLetter;
+
+    if (isNumber) {
+      var isUpper = false;
+    } else if (isLetter) {
+      var isUpper = (char == upper);
+    } else {
+      var isUpper = false;
     }
-    if (isUpper && !word) {
-      word = char.toLowerCase()
-    } else if (isUpper) {
-      words.push(word)
-      word = char.toLowerCase()
-    } else if (isLower && !word && isNumber && words.length < 1) {
-      // do nothing, can't start with a number
-    } else if (isLower && !word) {
-      word = char
-    } else if (isLower && word) {
-      word = word + char
-    } else if (!isAlphaNumeric && word) {
-      words.push(word)
-      word = undefined
+
+    if (needsDash && isAlphaNumeric) {
+      sentence.push("-");
+      needsDash = false;
+    } else if (isUpper && sentence.length) {
+      sentence.push("-");
+    }
+
+    if (isAlphaNumeric) {
+      sentence.push(lower);
+    } else if (sentence.length && !isAlphaNumeric) {
+      needsDash = true;
     }
   }
 
-  if (word != undefined) {
-    words.push(word)
-  }
-
-  var dashed = words.join("-")
-
-  return dashed
-}
+  return sentence.join("");
+};
