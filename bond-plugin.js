@@ -7,23 +7,27 @@ module.exports = library.export(
     var HOURLY = 2000
     var HOUSE_PER_SECTION = 8
 
-    function register(list) {
-      if (list.__bondPlugingRegisteredTags) { return }
-
-      list.registerTag(
-        "base floor section",
-        {
-          xSize: 48,
-          zSize: 96,
-          join: "right",
-        }
-      )
-
-      list.registerTag("2ft floor extension", {
+    var tagData = {
+      "base floor section": {
+        xSize: 48,
+        zSize: 96,
+        join: "right",
+        generator: floorSection,
+      },
+      "2ft floor extension": {
         xSize: 24,
         zSize: 96,
         join: "left",
-      })
+        generator: floorSection,
+      }
+    }
+
+    function register(list) {
+      if (list.__bondPlugingRegisteredTags) { return }
+
+      for(var tag in tagData) {
+        list.registerTag(tag, tagData[tag])
+      }
 
       list.__bondPlugingRegisteredTags = true
     }
@@ -35,13 +39,8 @@ module.exports = library.export(
       var plan = new HousePlan()
       var hours = 0
 
-      var generators = {
-        "base floor section": floorSection,
-        "2ft floor extension": floorSection,
-      }
-
-      for(var tag in generators) {
-        var generator = generators[tag]
+      for(var tag in tagData) {
+        var generator = tagData[tag].generator
 
         list.eachTagged(tag,
           function(task, data) {
