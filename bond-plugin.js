@@ -35,15 +35,21 @@ module.exports = library.export(
       var plan = new HousePlan()
       var hours = 0
 
-      list.eachTagged(
-        "base floor section",
-        function(task, data) {
-          console.log("we're actually adding a floor section here!", JSON.stringify(data, null,2))
-          if (data == 0) { throw new Error("data is not an object") }
-          plan.add(floorSection, data)
-          hours += HOUSE_PER_SECTION
-        }
-      )
+      var generators = {
+        "base floor section": floorSection,
+        "2ft floor extension": floorSection,
+      }
+
+      for(var tag in generators) {
+        var generator = generators[tag]
+
+        list.eachTagged(tag,
+          function(task, data) {
+            plan.add(generator, data)
+            hours += HOUSE_PER_SECTION
+          }
+        )
+      }
 
       var materials = allocateMaterials(plan)
 
