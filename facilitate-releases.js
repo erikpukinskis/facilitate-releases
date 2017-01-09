@@ -62,7 +62,7 @@ library.define(
 
         this.id = "list-"+list.id+"-task-"+taskId
 
-        var onToggle = bridge.__taskTemplateToggleTagBinding.withArgs(list.id, taskId, tagsSelector)
+        var onToggle = bridge.__taskTemplateToggleTagBinding.withArgs(list.id, taskText, tagsSelector)
 
         var tagToggles = list.tags.map(
           function(tagText) {
@@ -147,7 +147,7 @@ library.define(
       countEl.innerHTML = count
     }
 
-    function toggleTag(makeRequest, addHtml, listId, taskId, tagsSelector, tagText, tagId, isChecked) {
+    function toggleTag(makeRequest, addHtml, listId, taskText, tagsSelector, tagText, tagId, isChecked) {
 
       try {
         var tagEl = document.querySelector(tagsSelector+" .tag-"+tagId)
@@ -163,7 +163,7 @@ library.define(
 
       makeRequest({
         method: "post",
-        path: "/release-checklist/"+listId+"/tasks/"+taskId+"/tags/"+encodeURIComponent(tagText),
+        path: "/release-checklist/"+listId+"/tasks/"+encodeURIComponent(taskText)+"/tags/"+encodeURIComponent(tagText),
         data: {shouldBeTagged: isChecked},
       })
     }
@@ -333,21 +333,22 @@ module.exports = library.export(
 
       site.addRoute(
         "post",
-        "/release-checklist/:listId/tasks/:taskId/tags/:tagText",
+        "/release-checklist/:listId/tasks/:taskText/tags/:tagText",
         function(request, response) {
           var list = releaseChecklist.get(request.params.listId)
           var tagText = request.params.tagText
           var shouldBeTagged = request.body.shouldBeTagged
-          var task = request.params.taskId
-          var hasTag = list.hasTag(task, tagText)
+          var taskText = request.params.taskText
+          var hasTag = list.hasTag(taskText, tagText)
+
           var taskId = request.params.taskId
 
           if (shouldBeTagged && !hasTag) {
-            releaseChecklist.tag(list, taskId, tagText)
-            tellTheUniverse("releaseChecklist.tag", list.id, taskId, tagText)
+            releaseChecklist.tag(list, taskText, tagText)
+            tellTheUniverse("releaseChecklist.tag", list.id, taskText, tagText)
           } else if (hasTag && !shouldBeTagged) {
-            releaseChecklist.untag(list, taskId, tagText)
-            tellTheUniverse("  releaseChecklist.untag", list.id, taskId, tagText)
+            releaseChecklist.untag(list, taskText, tagText)
+            tellTheUniverse("  releaseChecklist.untag", list.id, taskText, tagText)
           }
           response.send({ok: true})
         }

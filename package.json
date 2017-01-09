@@ -5,7 +5,7 @@
   "main": "facilitate-releases.js",
   "dependencies": {
     "module-library": "*",
-    "release-checklist": ">= 0.11.0",
+    "release-checklist": ">= 0.12.0",
     "web-element": ">= 0.63.0",
     "web-site": "*",
     "browser-bridge": "*",
