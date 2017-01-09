@@ -179,8 +179,8 @@ library.define(
 
 library.define(
   "render-checklist",
-  ["task-template", "web-element", "./bond-plugin", "scroll-to-select", "bridge-module", "./dasherize"],
-  function(taskTemplate, element, bondPlugin, scrollToSelect, bridgeModule, dasherize) {
+  ["task-template", "web-element", "./housing-bond", "scroll-to-select", "bridge-module", "./dasherize"],
+  function(taskTemplate, element, housingBond, scrollToSelect, bridgeModule, dasherize) {
 
     function renderChecklist(list, bridge) {
 
@@ -189,7 +189,7 @@ library.define(
 
       var bondBridge = bridge.partial()
 
-      bondPlugin(list, bondBridge)
+      housingBond(list, bondBridge)
 
 
       // Tasks

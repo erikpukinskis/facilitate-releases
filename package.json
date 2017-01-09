@@ -16,7 +16,9 @@
     "make-it-checkable": "*",
     "bridge-module": "*",
     "scroll-to-select": "*",
-    "add-html": "*"
+    "add-html": "*",
+    "house-panels": "*",
+    "house-plan": "*"
   },
   "scripts": {
     "start": "node start.js"

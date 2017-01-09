@@ -211,7 +211,7 @@ library.define(
 
 module.exports = library.export(
   "allocate-materials",
-  ["set-of-materials", "./house-plan"],
+  ["set-of-materials", "house-plan"],
   function(SetOfMaterials, HousePlan) {
 
     function allocateMaterials(plan) {
