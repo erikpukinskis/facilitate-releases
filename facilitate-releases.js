@@ -31,26 +31,6 @@ library.define(
       }
     )
 
-    var tagToggleTemplate = element.template(".toggle-button",
-      function(bridge, onToggle, tagText, tagId, isTagged) {
-
-        this.addChild(tagText)
-
-        var tagId = dasherize(tagText)
-
-        makeItCheckable(
-          this,
-          bridge,
-          onToggle.withArgs(tagText, tagId),
-          {kind: "toggle-button"}
-        )
-
-        if (isTagged) {
-          this.addSelector(".is-checked")
-        }
-      }
-    )
-
     var taskTemplate = element.template(
       ".task",
       element.style({
@@ -105,6 +85,26 @@ library.define(
 
         details.id = this.id+"-details"
         this.addChild(details)
+      }
+    )
+
+    var tagToggleTemplate = element.template(".toggle-button",
+      function(bridge, onToggle, tagText, tagId, isTagged) {
+
+        this.addChild(tagText)
+
+        var tagId = dasherize(tagText)
+
+        makeItCheckable(
+          this,
+          bridge,
+          onToggle.withArgs(tagText, tagId),
+          {kind: "toggle-button"}
+        )
+
+        if (isTagged) {
+          this.addSelector(".is-checked")
+        }
       }
     )
 
