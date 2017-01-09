@@ -2,8 +2,8 @@ var library = require("module-library")(require)
 
 module.exports = library.export(
   "side-wall",
-  ["./roof", "./floor-section"],
-  function(roof, floorSection) {
+  ["./house-plan", "./roof", "./floor-section"],
+  function(HousePlan, roof, floorSection) {
 
     function sideWall(section, stud, plywood, sloped, trim, sloped, tilted, verticalSlice, insulation, getJoinGaps, getOverhangs, options) {
 
@@ -186,7 +186,7 @@ module.exports = library.export(
 
       var battenXPos = flip ? stud.DEPTH + plywood.THICKNESS : -plywood.THICKNESS - trim.THICKNESS
 
-      var battenWidth = batten.WIDTH
+      var battenWidth = HousePlan.parts.batten.WIDTH
 
       var batten = {
         section: wall,

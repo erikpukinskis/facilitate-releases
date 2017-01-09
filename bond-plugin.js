@@ -2,8 +2,8 @@ var library = require("module-library")(require)
 
 module.exports = library.export(
   "bond-plugin",
-  ["./house-plan", "./floor-section", "./face-wall", "./roof", "./door-section", "./allocate-materials", "./invoice-materials", "web-element"],
-  function(HousePlan, floorSection, faceWall, roof, doorSection, allocateMaterials, invoiceMaterials, element) {
+  ["./house-plan", "./floor-section", "./face-wall", "./roof", "./door-section", "./side-wall", "./allocate-materials", "./invoice-materials", "web-element"],
+  function(HousePlan, floorSection, faceWall, roof, doorSection, sideWall, allocateMaterials, invoiceMaterials, element) {
     var HOURLY = 2000
     var HOUSE_PER_SECTION = 8
 
@@ -34,6 +34,20 @@ module.exports = library.export(
     var frontWallPosition = 48+24 - HousePlan.parts.stud.DEPTH
 
     var frontWallHeight = FLOOR_TOP - headerRafterIntersection.yPos 
+
+    var wallHang = HousePlan.parts.stud.DEPTH + HousePlan.parts.plywood.THICKNESS
+
+    var interiorWidth = 48 - wallHang
+
+    var sideHeightA = BACK_WALL_INSIDE_HEIGHT + HousePlan.verticalSlice(0.75, SLOPE) + interiorWidth*SLOPE
+
+    var sideWidthA = 48 - wallHang
+
+    var topOverhang = HousePlan.verticalSlice(roof.RAFTER_HEIGHT - 0.75, SLOPE)
+
+    var sideWidthB = 24 - wallHang
+
+    var sideHeightB = sideHeightA + sideWidthB*SLOPE
 
     var backWallOptions = {
       xSize: 48,
@@ -98,6 +112,30 @@ module.exports = library.export(
       },
       "roof": {
         generator: roof,
+        slope: SLOPE,
+      },
+      "side wall": {
+        generator: sideWall,
+        ySize: sideHeightA,
+        zPos: wallHang,
+        zSize: sideWidthA,
+        joins: "right top",
+        leftOverhang: wallHang,
+        bottomOverhang: floorSection.HEIGHT,
+        topOverhang: topOverhang,
+        whichSide: "left",
+        slope: SLOPE,
+      },
+      "side wall 2ft extension": {
+        generator: sideWall,
+        ySize: sideHeightB,
+        zPos: 48,
+        zSize: sideWidthB,
+        joins: "left top",
+        bottomOverhang: floorSection.HEIGHT,
+        topOverhang: topOverhang,
+        rightOverhang: wallHang,
+        whichSide: "left",
         slope: SLOPE,
       },
     }
