@@ -341,11 +341,8 @@ module.exports = library.export(
           var hasTag = list.hasTag(task, tagText)
           var taskId = request.params.taskId
 
-          console.log("shouldBeTagged?", shouldBeTagged, "hasTag?", hasTag)
-
           if (shouldBeTagged && !hasTag) {
             releaseChecklist.tag(list, taskId, tagText)
-            debugger
             tellTheUniverse("releaseChecklist.tag", list.id, taskId, tagText)
           } else if (hasTag && !shouldBeTagged) {
             releaseChecklist.untag(list, taskId, tagText)

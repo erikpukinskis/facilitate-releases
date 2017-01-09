@@ -2,19 +2,38 @@ var library = require("module-library")(require)
 
 module.exports = library.export(
   "bond-plugin",
-  ["./house-plan", "./floor-section", "./face-wall", "./roof", "./allocate-materials", "./invoice-materials", "web-element"],
-  function(HousePlan, floorSection, faceWall, roof, allocateMaterials, invoiceMaterials, element) {
+  ["./house-plan", "./floor-section", "./face-wall", "./roof", "./door-section", "./allocate-materials", "./invoice-materials", "web-element"],
+  function(HousePlan, floorSection, faceWall, roof, doorSection, allocateMaterials, invoiceMaterials, element) {
     var HOURLY = 2000
     var HOUSE_PER_SECTION = 8
 
     var BACK_WALL_INSIDE_HEIGHT = 80
     var SLOPE = 1/8
+    var FLOOR_TOP = 96
 
     var backPlateRightHeight = roof.RAFTER_HEIGHT - HousePlan.verticalSlice(HousePlan.parts.twinWall.THICKNESS, SLOPE)
 
     var rafterContact = HousePlan.parts.stud.DEPTH+HousePlan.parts.plywood.THICKNESS*SLOPE
 
     var backPlateLeftHeight = backPlateRightHeight - rafterContact*SLOPE
+
+    var rafterStart = {
+      zPos: HousePlan.parts.stud.DEPTH + HousePlan.parts.plywood.THICKNESS,
+      yPos: FLOOR_TOP - BACK_WALL_INSIDE_HEIGHT
+    }
+
+    var betweenRafterIntersections = 72 - rafterStart.zPos
+    var elevationBetweenIntersections = betweenRafterIntersections*SLOPE
+
+    var headerRafterIntersection = {
+      xPos: 0,
+      zPos: 72,
+      yPos: rafterStart.yPos - elevationBetweenIntersections
+    }
+
+    var frontWallPosition = 48+24 - HousePlan.parts.stud.DEPTH
+
+    var frontWallHeight = FLOOR_TOP - headerRafterIntersection.yPos 
 
     var backWallOptions = {
       xSize: 48,
@@ -54,6 +73,33 @@ module.exports = library.export(
           rightBattenOverhang: HousePlan.parts.plywood.THICKNESS,
         }
       ),
+      "door section": {
+        generator: doorSection,
+        xSize: 48,
+        joins: "right top-full",
+        bottomOverhang: floorSection.HEIGHT,
+        topOverhang: roof.RAFTER_HEIGHT,
+        ySize: frontWallHeight
+      },
+      "window section": {
+        generator: faceWall,
+        ySize: frontWallHeight,
+        xSize: 48,
+        openingWidth: 24,
+        openingHeight: 48,
+        openingBottom: 39-12,
+        openingLeft: 6,
+        bottomOverhang: floorSection.HEIGHT,
+        topOverhang: roof.RAFTER_HEIGHT,
+        joins: "top-full left",
+        rightBattenOverhang: HousePlan.parts.plywood.THICKNESS,
+        orientation: "south",
+        slopeBattens: false,
+      },
+      "roof": {
+        generator: roof,
+        slope: SLOPE,
+      },
     }
 
     function register(list) {
@@ -71,7 +117,6 @@ module.exports = library.export(
       register(list)
 
       var plan = new HousePlan()
-      console.log("plan has "+plan.generators.length+" generators")
       var hours = 0
 
       for(var tag in tagData) {
@@ -83,13 +128,10 @@ module.exports = library.export(
               throw new Error("boo")
             }
             plan.add(generator, data)
-            console.log("boo!", data)
             hours += HOUSE_PER_SECTION
           }
         )
       }
-
-      console.log("after tags, plan has "+plan.generators.length+" generators")
 
       var materials = allocateMaterials(plan)
 
