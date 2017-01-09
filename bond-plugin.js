@@ -66,7 +66,7 @@ module.exports = library.export(
         join: "right",
         generator: floorSection,
       },
-      "2ft floor extension": {
+      "floor extension": {
         xSize: 24,
         zSize: 96,
         join: "left",
@@ -126,7 +126,7 @@ module.exports = library.export(
         whichSide: "left",
         slope: SLOPE,
       },
-      "side wall 2ft extension": {
+      "side wall extension": {
         generator: sideWall,
         ySize: sideHeightB,
         zPos: 48,

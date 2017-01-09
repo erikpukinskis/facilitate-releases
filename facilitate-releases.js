@@ -23,7 +23,8 @@ library.define(
         "margin-left": "0.5em",
         "letter-spacing": "-0.08em",
         "font-weight": "bold",
-        "line-height": "1em"
+        "line-height": "1em",
+        "white-space": "nowrap",
       }),
       function(text) {
         this.classes.push("tag-"+dasherize(text))
