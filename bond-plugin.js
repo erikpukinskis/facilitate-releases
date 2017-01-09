@@ -2,10 +2,29 @@ var library = require("module-library")(require)
 
 module.exports = library.export(
   "bond-plugin",
-  ["./house-plan", "./floor-section", "./allocate-materials", "./invoice-materials", "web-element"],
-  function(HousePlan, floorSection, allocateMaterials, invoiceMaterials, element) {
+  ["./house-plan", "./floor-section", "./face-wall", "./roof", "./allocate-materials", "./invoice-materials", "web-element"],
+  function(HousePlan, floorSection, faceWall, roof, allocateMaterials, invoiceMaterials, element) {
     var HOURLY = 2000
     var HOUSE_PER_SECTION = 8
+
+    var BACK_WALL_INSIDE_HEIGHT = 80
+    var SLOPE = 1/8
+
+    var backPlateRightHeight = roof.RAFTER_HEIGHT - HousePlan.verticalSlice(HousePlan.parts.twinWall.THICKNESS, SLOPE)
+
+    var rafterContact = HousePlan.parts.stud.DEPTH+HousePlan.parts.plywood.THICKNESS*SLOPE
+
+    var backPlateLeftHeight = backPlateRightHeight - rafterContact*SLOPE
+
+    var backWallOptions = {
+      xSize: 48,
+      ySize: 80,
+      topOverhang: backPlateLeftHeight - HousePlan.parts.plywood.THICKNESS*SLOPE,
+      bottomOverhang: floorSection.HEIGHT,
+      orientation: "north",
+      slope: SLOPE,
+      generator: faceWall,
+    }
 
     var tagData = {
       "base floor section": {
@@ -19,7 +38,22 @@ module.exports = library.export(
         zSize: 96,
         join: "left",
         generator: floorSection,
-      }
+      },
+      "back wall section": merge(
+        backWallOptions,
+        {
+          leftBattenOverhang: HousePlan.parts.plywood.THICKNESS,
+          joins: "right top-full",
+          rightBattenOverhang: 0.75,
+        }
+      ),        
+      "back wall extension": merge(
+        backWallOptions,
+        {
+          joins: "left top-full",
+          rightBattenOverhang: HousePlan.parts.plywood.THICKNESS,
+        }
+      ),
     }
 
     function register(list) {
@@ -44,6 +78,9 @@ module.exports = library.export(
 
         list.eachTagged(tag,
           function(task, data) {
+            if (!data) {
+              throw new Error("boo")
+            }
             plan.add(generator, data)
             hours += HOUSE_PER_SECTION
           }
@@ -92,6 +129,14 @@ module.exports = library.export(
       }
 
       return dollars+"."+remainder
+    }
+
+
+    function merge(obj1,obj2){
+      var obj3 = {};
+      for (var attrname in obj1) { obj3[attrname] = obj1[attrname]; }
+      for (var attrname in obj2) { obj3[attrname] = obj2[attrname]; }
+      return obj3;
     }
 
 

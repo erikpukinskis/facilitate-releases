@@ -8,6 +8,7 @@ module.exports = library.export(
 
       var BATTEN_WIDTH = batten.WIDTH
 
+      debugger
       if (!options.orientation) {
         throw new Error("face wall needs an orientation")
       }

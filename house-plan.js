@@ -10,6 +10,29 @@ module.exports = library.export(
       this.indexesByName = {}
     }
 
+    var KEYWORDS = [
+      "section",
+      "stud",
+      "plywood",
+      "section",
+      "door",
+      "trim",
+      "shade",
+      "twinWall",
+      "insulation",
+      "flooring",
+      "tilted",
+      "sloped",
+      "shade",
+      "batten",
+      "verticalSlice",
+      "sliceToNormal",
+      "slopeToDegrees",
+      "slopeToRadians",
+      "getJoinGaps",
+      "getOverhangs",
+    ]
+
     HousePlan.parts = {
       stud: {
         WIDTH: 1.25,
@@ -90,6 +113,10 @@ module.exports = library.export(
             if (!handler) {
               handler = helpers[name]
             }
+            if (!handler && contains(KEYWORDS, name)) {
+              handler = noop
+              console.log("⚡⚡⚡ WARNING House plan needs a "+name+" handler but the function you passed to housePlan.generate() doesn't provide one ⚡⚡⚡")
+            }
             if (handler) {
               addConstants(handler, name)
               args.push(handler)
@@ -104,6 +131,8 @@ module.exports = library.export(
         }
 
       }
+
+    function noop() {}
 
     function addConstants(handler, name) {
       ;["DEPTH", "WIDTH", "HEIGHT", "THICKNESS"].forEach(function(dimension) {
@@ -127,6 +156,9 @@ module.exports = library.export(
 
     HousePlan.prototype.add =
       function add(generator, options) {
+        if (typeof generator != "function") {
+          throw new Error("First argument to housePlan.add should be a function")
+        }
         var parameters = []
   
         // oi this is very hacky, conventional
@@ -186,6 +218,19 @@ module.exports = library.export(
       return Math.atan(slope)
     }
 
+    function contains(array, value) {
+      if (!Array.isArray(array)) {
+        throw new Error("looking for "+JSON.stringify(value)+" in "+JSON.stringify(array)+", which is supposed to be an array. But it's not.")
+      }
+      var index = -1;
+      var length = array.length;
+      while (++index < length) {
+        if (array[index] == value) {
+          return true;
+        }
+      }
+      return false;
+    }
 
     HousePlan.verticalSlice = verticalSlice
 

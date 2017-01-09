@@ -12,18 +12,18 @@ library.define(
     var tagTemplate = element.template(
       ".tag", 
       element.style({
-        "background": "#bfb6c5",
+        "background": "#444",
         "color": "white",
-        "padding": "3px 6px 2px 5px",
+        "padding": "2px 8px 2px 7px",
         "display": "inline-block",
-        "border-radius": "2px",
+        "border-radius": "0.25em",
         "font-size": "0.76em",
         "text-transform": "uppercase",
         "vertical-align": "2px",
         "margin-left": "0.5em",
         "letter-spacing": "-0.08em",
         "font-weight": "bold",
-        "box-shadow": "-3px 0px 0 #f2f1ff",
+        "line-height": "1em"
       }),
       function(text) {
         this.classes.push("tag-"+dasherize(text))
@@ -54,9 +54,11 @@ library.define(
     var taskTemplate = element.template(
       ".task",
       element.style({
-        "padding": "8px",
+        // "padding": "8px",
         "display": "inline-block",
         "width": "100%",
+        "line-height": "1.3em",
+        "margin-bottom": "0.5em",
       }),
       function(bridge, list, taskText, tags, isComplete, taskId) {
 
@@ -292,6 +294,19 @@ module.exports = library.export(
       releaseChecklist.addTask("test", "Floor section built")
 
       releaseChecklist.tag("test", "floor section built", "base floor section")
+
+      releaseChecklist.tag("test", "floor-section-built", "back wall section")
+
+      releaseChecklist.addTask("test", "needs a batten handler but the function you passed to housePlan")
+
+      releaseChecklist.addTask("test", "needs a batten")
+
+      releaseChecklist.addTask("test", "handler but")
+
+      releaseChecklist.addTask("test", "the function you passed to housePlan the function you passed to housePlan")
+
+      releaseChecklist.tag("test", "needs-a-batten-handler-but-the-function-you-passed-to-house-plan", "base floor section")
+  
 
       var storyForm = element("form", {method: "post", action: "/stories"}, [
         element("p", "Tell a story."),
