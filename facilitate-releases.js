@@ -291,21 +291,21 @@ module.exports = library.export(
 
       releaseChecklist("A 6x8 teensy house appears", "test")
 
-      releaseChecklist.addTask("test", "Floor section built")
+      // releaseChecklist.addTask("test", "Floor section built")
 
-      releaseChecklist.tag("test", "floor section built", "base floor section")
+      // releaseChecklist.tag("test", "floor section built", "base floor section")
 
-      releaseChecklist.tag("test", "floor-section-built", "back wall section")
+      // releaseChecklist.tag("test", "floor-section-built", "back wall section")
 
-      releaseChecklist.addTask("test", "needs a batten handler but the function you passed to housePlan")
+      // releaseChecklist.addTask("test", "needs a batten handler but the function you passed to housePlan")
 
-      releaseChecklist.addTask("test", "needs a batten")
+      // releaseChecklist.addTask("test", "needs a batten")
 
-      releaseChecklist.addTask("test", "handler but")
+      // releaseChecklist.addTask("test", "handler but")
 
-      releaseChecklist.addTask("test", "the function you passed to housePlan the function you passed to housePlan")
+      releaseChecklist.addTask("test", "the function you passed to housePlan the function you passed to")
 
-      releaseChecklist.tag("test", "needs-a-batten-handler-but-the-function-you-passed-to-house-plan", "base floor section")
+      releaseChecklist.tag("test", "the-function-you-passed-to-house-plan-the-function-you-passed-to", "back wall section")
   
 
       var storyForm = element("form", {method: "post", action: "/stories"}, [
@@ -341,8 +341,11 @@ module.exports = library.export(
           var hasTag = list.hasTag(task, tagText)
           var taskId = request.params.taskId
 
+          console.log("shouldBeTagged?", shouldBeTagged, "hasTag?", hasTag)
+
           if (shouldBeTagged && !hasTag) {
             releaseChecklist.tag(list, taskId, tagText)
+            debugger
             tellTheUniverse("releaseChecklist.tag", list.id, taskId, tagText)
           } else if (hasTag && !shouldBeTagged) {
             releaseChecklist.untag(list, taskId, tagText)

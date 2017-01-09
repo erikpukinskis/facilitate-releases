@@ -10,6 +10,7 @@ library.define(
       this.byDescription = {}
       this.scrapsByName = {}
       this.scrapsByQuery = {}
+      this.pieceCount = 0
       this.get = get.bind(this)
     }
 
@@ -75,6 +76,8 @@ library.define(
           description: description,
           number: group.length + 1
         })
+
+        this.pieceCount++
 
         // PERSIST
 
@@ -144,6 +147,7 @@ library.define(
     SetOfMaterials.prototype.cut =
       function(material, cut, size, options) {
         var name = options.name
+        console.log("cutting "+options.name+" from "+material.description)
         if (material.cut && cut != material.cut) {
           throw new Error("trying to cut material the wrong way")
         }

@@ -71,6 +71,7 @@ module.exports = library.export(
       register(list)
 
       var plan = new HousePlan()
+      console.log("plan has "+plan.generators.length+" generators")
       var hours = 0
 
       for(var tag in tagData) {
@@ -82,12 +83,17 @@ module.exports = library.export(
               throw new Error("boo")
             }
             plan.add(generator, data)
+            console.log("boo!", data)
             hours += HOUSE_PER_SECTION
           }
         )
       }
 
+      console.log("after tags, plan has "+plan.generators.length+" generators")
+
       var materials = allocateMaterials(plan)
+
+      console.log(materials.pieceCount+" materials")
 
       var invoice = invoiceMaterials(materials)
 

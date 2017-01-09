@@ -5,11 +5,11 @@
   "main": "facilitate-releases.js",
   "dependencies": {
     "module-library": "*",
-    "release-checklist": ">= 0.10.0",
+    "release-checklist": ">= 0.11.0",
     "web-element": ">= 0.63.0",
     "web-site": "*",
     "browser-bridge": "*",
-    "tell-the-universe": "*",
+    "tell-the-universe": ">= 0.10.0",
     "basic-styles": "*",
     "function-call": "*",
     "make-request": "*",
