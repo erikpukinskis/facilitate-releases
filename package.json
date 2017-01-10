@@ -17,8 +17,7 @@
     "bridge-module": "*",
     "scroll-to-select": "*",
     "add-html": "*",
-    "house-panels": "*",
-    "house-plan": "*"
+    "housing-bond": "*"
   },
   "scripts": {
     "start": "node start.js"
