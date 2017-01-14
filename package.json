@@ -17,7 +17,8 @@
     "bridge-module": "*",
     "scroll-to-select": "*",
     "add-html": "*",
-    "housing-bond": "*"
+    "with-nearby-modules": "*",
+    "web-host": "*"
   },
   "scripts": {
     "start": "node start.js"

@@ -2,24 +2,22 @@ var library = require("module-library")(require)
 
 module.exports = library.export(
   "facilitate-releases",
-  ["release-checklist", "web-element", "browser-bridge", "tell-the-universe", "basic-styles", "./render-checklist"],
-  function(releaseChecklist, element, BrowserBridge, tellTheUniverse, basicStyles, renderChecklist) {
+  ["release-checklist", "web-element", "browser-bridge", "tell-the-universe", "./render-checklist", "with-nearby-modules"],
+  function(releaseChecklist, element, BrowserBridge, tellTheUniverse, renderChecklist, withNearbyModules) {
 
-    return function(site) {
+    withNearbyModules(
+      ["browser-bridge", "release-checklist", "web-site"],
+      function(bridge, list, site) {
+        prepareSite(site)
+        renderChecklist(list, bridge)
+      }
+    )
 
+    function prepareSite(site) {
 
-      // Test data
-
-      releaseChecklist("A 6x8 teensy house appears", "test")
-
-      releaseChecklist.addTask("test", "the function you passed to housePlan the function you passed to")
-
-      releaseChecklist.tag("test", "the-function-you-passed-to-house-plan-the-function-you-passed-to", "back wall section")
-  
-
-
-
-      // Code
+      if (site.remember("facilitate-releases")) {
+        return
+      }
 
       tellTheUniverse = tellTheUniverse
         .called("project-process")
@@ -40,28 +38,23 @@ module.exports = library.export(
         })
       }
 
-      var storyForm = element("form", {method: "post", action: "/stories"}, [
-        element("p", "Tell a story."),
-        element("input", {type: "text", name: "story", placeholder: "Type what should happen"}),
-        element("input", {type: "submit", value: "Make it so"}),
-      ])
+      // var storyForm = element("form", {method: "post", action: "/stories"}, [
+      //   element("p", "Tell a story."),
+      //   element("input", {type: "text", name: "story", placeholder: "Type what should happen"}),
+      //   element("input", {type: "submit", value: "Make it so"}),
+      // ])
+
+
+      // baseBridge.requestHandler(storyForm)
+
+      // site.addRoute(
+      //   "get",
+      //   "/release-checklist",
+      //   baseBridge.requestHandler(storyForm)
+      // )
 
       var baseBridge = new BrowserBridge()
-
-      baseBridge.addToHead(basicStyles)
-
-      baseBridge.requestHandler(storyForm)
-
-      site.addRoute(
-        "get",
-        "/release-checklist",
-        baseBridge.requestHandler(storyForm)
-      )
-
-      "/release-checklist/test/tasks/0/tags/base-floor-section"
-      "/release-checklist/:listId/tasks/:task-id/tags/:tagId"
-
-
+      
       site.addRoute(
         "post",
         "/release-checklist/:listId/tasks/:taskText/tags/:tagText",
@@ -85,29 +78,15 @@ module.exports = library.export(
         }
       )
 
-      var storyBridge
       site.addRoute("post", "/stories", function(request, response) {
 
         var list = releaseChecklist(request.body.story)
 
         tellTheUniverse("releaseChecklist", list.story, list.id)
 
-        bridge = storyBridge = baseBridge.forResponse(response)
+        bridge = baseBridge.forResponse(response)
 
         bridge.changePath("/release-checklist/"+list.id)
-
-        renderChecklist(list, bridge)
-      })
-
-      site.addRoute("get", "/release-checklist/:id", function(request, response) {
-
-        var list = releaseChecklist.get(request.params.id)
-
-        if (!list) {
-          throw new Error("No list "+request.params.id+" to show")
-        }
-
-        var bridge = baseBridge.forResponse(response)
 
         renderChecklist(list, bridge)
       })
@@ -139,6 +118,11 @@ module.exports = library.export(
         renderChecklist(list, bridge)
       })
 
+      // site.addRoute(
+      //   "get", "/buy",
+      //   buy(materials)
+      // )
+
       site.addRoute("post", "/release-checklist/:id/happened/:text", function(request, response) {
 
         var id = request.params.id
@@ -155,8 +139,11 @@ module.exports = library.export(
 
         response.send({status: "ok"})
       })
+
+      site.see("facilitate-releases", true)
     }
 
+    return renderChecklist
   }
 )
 

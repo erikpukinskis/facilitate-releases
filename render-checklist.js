@@ -2,25 +2,16 @@ var library = require("module-library")(require)
 
 module.exports = library.export(
   "render-checklist",
-  ["./render-task", "web-element", "housing-bond", "scroll-to-select", "bridge-module", "./dasherize"],
-  function(renderTask, element, housingBond, scrollToSelect, bridgeModule, dasherize) {
+  ["./render-task", "web-element", "scroll-to-select", "bridge-module", "./dasherize", "basic-styles"],
+  function(renderTask, element, scrollToSelect, bridgeModule, dasherize, basicStyles) {
 
     function renderChecklist(list, bridge) {
-
-
-      // Bond
-
-      var bondBridge = bridge.partial()
-
-      housingBond(list, bondBridge)
-
-
-      // Tasks
 
       var completeCount = 0
       var taskIds = []
 
       renderTask.prepareBridge(bridge)
+      basicStyles.addTo(bridge)
 
       var tasks = list.tasks.map(
         function(text) {
@@ -77,7 +68,6 @@ module.exports = library.export(
         element("p", "Enter items to check off:"),
         element("textarea", {name: "tasks"}),
         element("input", {type: "submit", value: "Add tasks"}),
-        bondBridge,
       ])
       bridge.send(page)
     }
