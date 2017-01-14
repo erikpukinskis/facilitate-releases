@@ -54,7 +54,6 @@ module.exports = library.export(
 
       var headline = element(
         "h1",
-        element.style({"margin-top": "200px"}), 
         [
           list.story+" (",
           element("span.complete-count", completeCount),
