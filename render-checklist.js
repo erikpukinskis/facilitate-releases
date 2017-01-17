@@ -5,6 +5,23 @@ module.exports = library.export(
   ["./render-task", "web-element", "scroll-to-select", "bridge-module", "./dasherize", "basic-styles"],
   function(renderTask, element, scrollToSelect, bridgeModule, dasherize, basicStyles) {
 
+
+    function prepareBridge(bride) {
+      if (bridge.remember("render-task/showTaskDetails")) { return }
+
+      var showTaskDetails = bridge.defineFunction(function showTaskDetails(el) {
+        document.getElementById(el.id+"-details").style.display = "block"
+      })
+
+      bridge.see("render-task/showTaskDetails", showTaskDetails)
+
+      var hideTaskDetails = bridge.defineFunction(function hideTaskDetails(el) {
+        document.getElementById(el.id+"-details").style.display = "none"
+      })
+
+      bridge.see("render-task/hideTaskDetails", hideTaskDetails)
+    }
+
     function renderChecklist(list, bridge) {
 
       var completeCount = 0
@@ -34,20 +51,14 @@ module.exports = library.export(
         }
       )
 
-      var showTaskDetails = bridge.defineFunction(function showTaskDetails(el) {
-        document.getElementById(el.id+"-details").style.display = "block"
-      })
-
-      var hideTaskDetails = bridge.defineFunction(function hideTaskDetails(el) {
-        document.getElementById(el.id+"-details").style.display = "none"
-      })
+      prepareBridge(bridge)
 
       bridge.asap(
         bridgeModule(library, "scroll-to-select", bridge)
         .withArgs({
           ids: taskIds,
-          onSelect: showTaskDetails,
-          onUnselect: hideTaskDetails,
+          onSelect: bridge.remember("render-task/showTaskDetails"),
+          onUnselect: bridge.remember("render-task/hideTaskDetails"),
           text: "HIEEE"
         })
       )

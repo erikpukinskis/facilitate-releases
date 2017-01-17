@@ -58,13 +58,15 @@ module.exports = library.export(
         makeItCheckable(
           this,
           bridge,
-          bridge.__renderTaskOnTaskHappenedBinding.withArgs(list.taskId, taskText),
+          bridge.remember("render-task/onTaskHappened").withArgs(list.taskId, taskText),
           {checked: isComplete}
         )
 
         this.id = "list-"+list.id+"-task-"+taskId
 
-        var onToggle = bridge.__renderTaskToggleTagBinding.withArgs(list.id, taskText, tagsSelector)
+        var onToggle = bridge.remember("render-task/toggleTag")
+
+        onToggle.withArgs(list.id, taskText, tagsSelector)
 
         var tagToggles = list.tags.map(
           function(tagText) {
@@ -112,23 +114,25 @@ module.exports = library.export(
     )
 
     function prepareBridge(bridge) {
-      if (bridge.__renderTaskReady) {
-        return
-      }
+      console.log ("is render prepped?")
 
-      bridge.__renderTaskToggleTagBinding = bridge.defineFunction(
+      if (bridge.remember("render-task/toggleTag")) { return console.log("YA")}
+
+      var binding = bridge.defineFunction(
         [makeRequest.defineOn(bridge), addHtml.defineOn(bridge)], toggleTag)
 
-      bridge.__renderTaskOnTaskHappenedBinding = bridge.defineFunction(
+      bridge.see("render-task/toggleTag", binding)
+
+      binding = bridge.defineFunction(
         [makeRequest.defineOn(bridge)], onTaskHappened)
+
+      bridge.see("render-task/onTaskHappened", binding)
 
       bridge.addToHead(makeItCheckable.stylesheet)
 
       bridge.addToHead(element.stylesheet(renderTask))
 
       bridge.addToHead(element.stylesheet(renderTag, checkedTag))
-
-      bridge.__renderTaskReady = true
     }
 
     function onTaskHappened(makeRequest, listId, text, checked) {
