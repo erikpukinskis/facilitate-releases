@@ -97,10 +97,6 @@ module.exports = library.export(
         var id = request.params.id
         var list = releaseChecklist.get(id)
 
-        if (!list) {
-          throw new Error("No list "+id+"  to add tasks to")
-        }
-
         lines.forEach(function(line) {
           var text = line.trim()
 

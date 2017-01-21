@@ -45,9 +45,6 @@ module.exports = library.export(
       }),
       function(bridge, list, taskText, tags, isComplete, taskId) {
 
-        if (taskId.match(/ /)) {
-          throw new Error("space in task id!")
-        }
         var tagsSelector = ".tags-for-"+taskId
 
         var tagsEl = element("span.tags"+tagsSelector, tags.map(renderTag))
@@ -62,11 +59,9 @@ module.exports = library.export(
           {checked: isComplete}
         )
 
-        this.id = "list-"+list.id+"-task-"+taskId
+        this.id = "list-"+list.id+"__task-"+taskId
 
-        var onToggle = bridge.remember("render-task/toggleTag")
-
-        onToggle.withArgs(list.id, taskText, tagsSelector)
+        var onToggle = bridge.remember("render-task/onToggle").withArgs(list.id, taskText, tagsSelector)
 
         var tagToggles = list.tags.map(
           function(tagText) {
@@ -114,19 +109,59 @@ module.exports = library.export(
     )
 
     function prepareBridge(bridge) {
-      console.log ("is render prepped?")
 
-      if (bridge.remember("render-task/toggleTag")) { return console.log("YA")}
+      if (bridge.remember("render-task/onToggle")) { return }
 
-      var binding = bridge.defineFunction(
-        [makeRequest.defineOn(bridge), addHtml.defineOn(bridge)], toggleTag)
+      var onToggleBinding = bridge.defineFunction(
+        [makeRequest.defineOn(bridge), addHtml.defineOn(bridge)],
+        function onToggle(makeRequest, addHtml, listId, taskText, tagsSelector, tagText, tagId, isChecked) {
 
-      bridge.see("render-task/toggleTag", binding)
+          debugger
 
-      binding = bridge.defineFunction(
-        [makeRequest.defineOn(bridge)], onTaskHappened)
+          try {
+            var tagEl = document.querySelector(tagsSelector+" .tag-"+tagId)
+          } catch(e) {}
 
-      bridge.see("render-task/onTaskHappened", binding)
+          if (tagEl && !isChecked) {
+            tagEl.style.display = "none"
+          } else if (tagEl && isChecked) {
+            tagEl.style.display = "inline-block"
+          } else if (!tagEl && isChecked) {
+            addHtml.inside(tagsSelector, "<div class=\"tag tag-"+tagId+"\">"+tagText+"</div>")
+          }
+
+          makeRequest({
+            method: "post",
+            path: "/release-checklist/"+listId+"/tasks/"+encodeURIComponent(taskText)+"/tags/"+encodeURIComponent(tagText),
+            data: {shouldBeTagged: isChecked},
+          })
+        }
+      )
+
+      bridge.see("render-task/onToggle", onToggleBinding)
+
+      var onTaskHappenedBinding = bridge.defineFunction(
+        [makeRequest.defineOn(bridge)],
+        function onTaskHappened(makeRequest, listId, text, checked) {
+          var path = "/release-checklist/"+listId+"/happened/"+encodeURIComponent(text)
+
+          makeRequest({method: "post", path: path, data: {isChecked: checked}})
+
+          var countEl = document.querySelector(".complete-count")
+
+          var count = parseInt(countEl.innerText)
+
+          if (checked) {
+            count++
+          } else {
+            count--
+          }
+
+          countEl.innerHTML = count
+        }
+      )
+
+      bridge.see("render-task/onTaskHappened", onTaskHappenedBinding)
 
       bridge.addToHead(makeItCheckable.stylesheet)
 
@@ -134,46 +169,6 @@ module.exports = library.export(
 
       bridge.addToHead(element.stylesheet(renderTag, checkedTag))
     }
-
-    function onTaskHappened(makeRequest, listId, text, checked) {
-      var path = "/release-checklist/"+listId+"/happened/"+encodeURIComponent(text)
-
-      makeRequest({method: "post", path: path, data: {isChecked: checked}})
-
-      var countEl = document.querySelector(".complete-count")
-
-      var count = parseInt(countEl.innerText)
-
-      if (checked) {
-        count++
-      } else {
-        count--
-      }
-
-      countEl.innerHTML = count
-    }
-
-    function toggleTag(makeRequest, addHtml, listId, taskText, tagsSelector, tagText, tagId, isChecked) {
-
-      try {
-        var tagEl = document.querySelector(tagsSelector+" .tag-"+tagId)
-      } catch(e) {}
-
-      if (tagEl && !isChecked) {
-        tagEl.style.display = "none"
-      } else if (tagEl && isChecked) {
-        tagEl.style.display = "inline-block"
-      } else if (!tagEl && isChecked) {
-        addHtml.inside(tagsSelector, "<div class=\"tag tag-"+tagId+"\">"+tagText+"</div>")
-      }
-
-      makeRequest({
-        method: "post",
-        path: "/release-checklist/"+listId+"/tasks/"+encodeURIComponent(taskText)+"/tags/"+encodeURIComponent(tagText),
-        data: {shouldBeTagged: isChecked},
-      })
-    }
-
 
     renderTask.prepareBridge = prepareBridge
 
