@@ -5,13 +5,6 @@ module.exports = library.export(
   ["release-checklist", "web-element", "browser-bridge", "tell-the-universe", "./render-checklist", "with-nearby-modules"],
   function(releaseChecklist, element, BrowserBridge, tellTheUniverse, renderChecklist, withNearbyModules) {
 
-    withNearbyModules(
-      ["browser-bridge", "release-checklist", "web-site"],
-      function(bridge, list, site) {
-        prepareSite(site)
-        renderChecklist(list, bridge)
-      }
-    )
 
     function prepareSite(site) {
 
@@ -139,6 +132,8 @@ module.exports = library.export(
       site.see("facilitate-releases", true)
     }
 
+    renderChecklist.prepareSite = prepareSite
+    
     return renderChecklist
   }
 )
