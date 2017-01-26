@@ -6,29 +6,29 @@ module.exports = library.export(
   function(releaseChecklist, element, BrowserBridge, tellTheUniverse, renderChecklist, withNearbyModules) {
 
 
+    tellTheUniverse = tellTheUniverse
+      .called("project-process")
+      .withNames({
+        releaseChecklist: "release-checklist",
+        workSpace: "work-space",
+      })
+
+    if (process.env.AWS_ACCESS_KEY_ID) {
+      tellTheUniverse.persistToS3({
+        key: process.env.AWS_ACCESS_KEY_ID,
+        secret: process.env.AWS_SECRET_ACCESS_KEY,
+        bucket: "ezjs"
+      })
+
+      tellTheUniverse.loadFromS3(function(){
+        console.log("OK! "+releaseChecklist.count+" lists")
+      })
+    }
+    
     function prepareSite(site) {
 
       if (site.remember("facilitate-releases")) {
         return
-      }
-
-      tellTheUniverse = tellTheUniverse
-        .called("project-process")
-        .withNames({
-          releaseChecklist: "release-checklist",
-          workSpace: "work-space",
-        })
-
-      if (process.env.AWS_ACCESS_KEY_ID) {
-        tellTheUniverse.persistToS3({
-          key: process.env.AWS_ACCESS_KEY_ID,
-          secret: process.env.AWS_SECRET_ACCESS_KEY,
-          bucket: "ezjs"
-        })
-
-        tellTheUniverse.loadFromS3(function(){
-          console.log("OK! "+releaseChecklist.count+" lists")
-        })
       }
 
       // var storyForm = element("form", {method: "post", action: "/stories"}, [
