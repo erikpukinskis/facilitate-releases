@@ -2,8 +2,8 @@ var library = require("module-library")(require)
 
 module.exports = library.export(
   "facilitate-releases",
-  ["release-checklist", "web-element", "browser-bridge", "tell-the-universe", "./render-checklist", "with-nearby-modules"],
-  function(releaseChecklist, element, BrowserBridge, tellTheUniverse, renderChecklist, withNearbyModules) {
+  ["release-checklist", "web-element", "browser-bridge", "tell-the-universe", "./render-checklist", "with-nearby-modules", "basic-styles"],
+  function(releaseChecklist, element, BrowserBridge, tellTheUniverse, renderChecklist, withNearbyModules, basicStyles) {
 
 
     tellTheUniverse = tellTheUniverse
@@ -11,7 +11,7 @@ module.exports = library.export(
       .withNames({
         releaseChecklist: "release-checklist",
         workSpace: "work-space",
-      })
+      })      
 
     if (process.env.AWS_ACCESS_KEY_ID) {
       tellTheUniverse.persistToS3({
@@ -31,22 +31,22 @@ module.exports = library.export(
         return
       }
 
-      // var storyForm = element("form", {method: "post", action: "/stories"}, [
-      //   element("p", "Tell a story."),
-      //   element("input", {type: "text", name: "story", placeholder: "Type what should happen"}),
-      //   element("input", {type: "submit", value: "Make it so"}),
-      // ])
-
-
-      // baseBridge.requestHandler(storyForm)
-
-      // site.addRoute(
-      //   "get",
-      //   "/release-checklist",
-      //   baseBridge.requestHandler(storyForm)
-      // )
-
       var baseBridge = new BrowserBridge()
+
+      basicStyles.addTo(baseBridge)
+
+      var storyForm = element("form", {method: "post", action: "/stories"}, [
+        element("p", "Tell a story."),
+        element("input", {type: "text", name: "story", placeholder: "Type what should happen"}),
+        element("p", element("input", {type: "submit", value: "Make it so"})),
+      ])
+
+
+      site.addRoute(
+        "get",
+        "/release-checklist",
+        baseBridge.requestHandler(storyForm)
+      )
       
       site.addRoute(
         "post",
