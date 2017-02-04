@@ -76,8 +76,8 @@ module.exports = library.export(
         headline,
         tasks,
         element("p", "Enter items to check off:"),
-        element("textarea", {name: "tasks"}),
-        element("p", element("input", {type: "submit", value: "Add tasks"})),
+        element("p", element("textarea", {name: "tasks"})),
+        element("input", {type: "submit", value: "Add tasks"}),
       ])
       bridge.send(page)
     }

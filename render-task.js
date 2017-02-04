@@ -38,8 +38,7 @@ module.exports = library.export(
       ".task",
       element.style({
         // "padding": "8px",
-        "display": "inline-block",
-        "width": "100%",
+        "display": "block",
         "line-height": "1.3em",
         "margin-bottom": "0.5em",
       }),
