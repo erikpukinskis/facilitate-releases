@@ -7,6 +7,10 @@ module.exports = library.export(
 
 
     function prepareBridge(bride) {
+
+      renderTask.prepareBridge(bridge)
+      basicStyles.addTo(bridge)
+
       if (bridge.remember("render-task/showTaskDetails")) { return }
 
       var showTaskDetails = bridge.defineFunction(function showTaskDetails(el) {
@@ -20,15 +24,33 @@ module.exports = library.export(
       })
 
       bridge.see("render-task/hideTaskDetails", hideTaskDetails)
+
+      var scrollToSelect = bridgeModule(library, "scroll-to-select", bridge)
+
+      bridge.see("scroll-to-select", scrollToSelect)
+
+      console.log("saw scroll-to-select", scrollToSelect)
+
     }
+
 
     function renderChecklist(list, bridge) {
 
       var completeCount = 0
       var taskIds = []
 
-      renderTask.prepareBridge(bridge)
-      basicStyles.addTo(bridge)
+      var scrollToSelect = bridge.remember("scroll-to-select")
+
+      console.log("looking up scroll-to-select", scrollToSelect)
+
+      bridge.asap(
+        scrollToSelect.withArgs({
+          ids: taskIds,
+          onSelect: bridge.remember("render-task/showTaskDetails"),
+          onUnselect: bridge.remember("render-task/hideTaskDetails"),
+          text: "HIEEE"
+        })
+      )
 
       var tasks = list.tasks.map(
         function(text) {
@@ -51,18 +73,6 @@ module.exports = library.export(
         }
       )
 
-      prepareBridge(bridge)
-
-      bridge.asap(
-        bridgeModule(library, "scroll-to-select", bridge)
-        .withArgs({
-          ids: taskIds,
-          onSelect: bridge.remember("render-task/showTaskDetails"),
-          onUnselect: bridge.remember("render-task/hideTaskDetails"),
-          text: "HIEEE"
-        })
-      )
-
       var headline = element(
         "h1",
         [
@@ -81,6 +91,8 @@ module.exports = library.export(
       ])
       bridge.send(page)
     }
+
+    renderChecklist.prepareBridge = prepareBridge
 
     return renderChecklist
   }
