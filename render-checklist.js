@@ -28,9 +28,6 @@ module.exports = library.export(
       var scrollToSelect = bridgeModule(library, "scroll-to-select", bridge)
 
       bridge.see("scroll-to-select", scrollToSelect)
-
-      console.log("saw scroll-to-select", scrollToSelect)
-
     }
 
 
@@ -40,8 +37,6 @@ module.exports = library.export(
       var taskIds = []
 
       var scrollToSelect = bridge.remember("scroll-to-select")
-
-      console.log("looking up scroll-to-select", scrollToSelect)
 
       bridge.asap(
         scrollToSelect.withArgs({
