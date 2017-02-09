@@ -6,7 +6,7 @@ module.exports = library.export(
   function(renderTask, element, scrollToSelect, bridgeModule, dasherize, basicStyles) {
 
 
-    function prepareBridge(bride) {
+    function prepareBridge(bridge) {
 
       renderTask.prepareBridge(bridge)
       basicStyles.addTo(bridge)
